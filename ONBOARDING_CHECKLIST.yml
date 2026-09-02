@@ -1,29 +1,29 @@
 system_id: dpro_landscape_exterior
-status: SHARED_DB_BOUND_DEPLOY_PENDING
+status: SUPABASE_LIVE_GITHUB_PAGES_ENABLEMENT_HOLD
 steps:
   - id: O01
     action: shared Supabase project selected; dedicated schema/table prefix/private bucket applied
     status: PASS
     blocking: false
   - id: O02
-    action: add dpro_landscape_exterior to Data API Exposed schemas without removing existing entries
-    status: PENDING_MANUAL
-    blocking: true
+    action: add and live-verify dpro_landscape_exterior in Data API Exposed schemas without removing existing entries
+    status: PASS
+    blocking: false
   - id: O03
     action: verify asymmetric Auth signing key/JWKS
-    status: PENDING_LIVE
-    blocking: true
+    status: PASS_ES256_P256
+    blocking: false
   - id: O04
     action: create production tenant row and first Owner Auth user
-    status: PENDING
+    status: PENDING_REAL_OWNER_IDENTITY
     blocking: true
   - id: O05
     action: map Owner user_id to tenant in dpro_landscape_exterior.landscape_user_access
     status: PENDING
     blocking: true
   - id: O06
-    action: create GitHub repository dpro-landscape-exterior-standard and upload canonical repository pack
-    status: PENDING_USER_CREATE_REPO
+    action: create/bind GitHub repository and deploy Pages
+    status: REPOSITORY_BOUND_PAGES_INITIAL_ENABLEMENT_HOLD
     blocking: true
   - id: O07
     action: create Cloudflare Worker dpro-landscape-exterior-core and bind non-secret vars + required secrets
