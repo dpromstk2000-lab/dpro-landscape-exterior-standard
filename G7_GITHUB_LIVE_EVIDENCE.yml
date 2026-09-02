@@ -1,22 +1,42 @@
 system_id: dpro_landscape_exterior
 evidence_type: github_live_binding
-verified_at: 2026-09-02T15:44:00+09:00
+verified_at: 2026-09-02T16:10:00+09:00
 repository:
   full_name: dpromstk2000-lab/dpro-landscape-exterior-standard
   visibility: public
   default_branch: main
   app_installation_account: dpromstk2000-lab
+  installation_id: 158416717
 checks:
   repository_exists: PASS
   github_app_installed: PASS
   repository_visible_to_installation: PASS
   write_test: PASS
   previous_403_resolved: PASS
+  workflow_file_present: PASS
+pages:
+  workflow: .github/workflows/deploy-pages.yml
+  source_commit: 4f373f9f3851fea748fc6cec376a5c2e093f460b
+  trigger_commit: 234de488e5c430375b697a5e028e01d5eb1b6ef2
+  enablement_workflow_commit: 22adbe95882dd5f520fe146a4eb9033bf7caee17
+  run_33602020011:
+    result: FAIL_CONFIGURE_PAGES_NOT_ENABLED
+  run_33602086696:
+    enablement_requested: true
+    result: FAIL_CREATE_PAGES_SITE_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION
+  status: HOLD_INITIAL_OWNER_ENABLEMENT
+  next_manual_action: Settings > Pages > Build and deployment > Source = GitHub Actions
 source_sync:
-  status: IN_PROGRESS
-  expected_text_and_binary_files: 46
-  note: formal commit SHA recorded after canonical tree is pushed
-remaining:
-  - canonical source commit
-  - GitHub Pages workflow execution
-  - public Pages URL verification
+  text_runtime_configuration: PARTIAL_LIVE
+  formal_checkpoint_is_canonical: true
+  missing_from_github_due_connector_transport:
+    - worker/worker.js
+    - SYSTEM_MASTER.yml
+    - site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_V1.0_20260902.pdf
+    - site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_V1.0_20260902.pdf
+    - site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_V1.0_20260902.pdf
+    - site/owner-static.png
+    - site/staff-static.png
+    - site/customer-static.png
+    - site/system-check-static.png
+  note: do not claim 46/46 canonical GitHub sync until missing files are present
