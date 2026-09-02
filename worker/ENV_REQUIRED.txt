@@ -24,3 +24,7 @@ RULES
 - Keep PRODUCTION_WRITE_ENABLED=false until controlled production switch.
 - Keep PUBLIC_INQUIRY_ENABLED=false until Turnstile live verification passes.
 - ALLOWED_ORIGINS must contain origin only, never a path and never wildcard in production.
+
+STAGE-1 DEPLOY TRIGGER
+triggered_at=2026-09-02T17:35:00+09:00
+purpose=Trigger first Cloudflare Git build after SUPABASE_SECRET_KEY binding
