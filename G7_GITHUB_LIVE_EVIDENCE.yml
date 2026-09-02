@@ -1,6 +1,6 @@
 system_id: dpro_landscape_exterior
 evidence_type: github_live_binding
-verified_at: 2026-09-02T16:10:00+09:00
+verified_at: 2026-09-02T16:28:00+09:00
 repository:
   full_name: dpromstk2000-lab/dpro-landscape-exterior-standard
   visibility: public
@@ -15,21 +15,38 @@ checks:
   previous_403_resolved: PASS
   workflow_file_present: PASS
 pages:
+  source_mode: GitHub Actions
   workflow: .github/workflows/deploy-pages.yml
-  source_commit: 4f373f9f3851fea748fc6cec376a5c2e093f460b
-  trigger_commit: 234de488e5c430375b697a5e028e01d5eb1b6ef2
-  enablement_workflow_commit: 22adbe95882dd5f520fe146a4eb9033bf7caee17
-  run_33602020011:
-    result: FAIL_CONFIGURE_PAGES_NOT_ENABLED
-  run_33602086696:
-    enablement_requested: true
-    result: FAIL_CREATE_PAGES_SITE_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION
-  status: HOLD_INITIAL_OWNER_ENABLEMENT
-  next_manual_action: Settings > Pages > Build and deployment > Source = GitHub Actions
+  public_url: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/
+  owner_enablement: PASS
+  standard_pages_run_33602803636:
+    result: SUCCESS
+    build: PASS
+    deploy: PASS
+  formal_site_workflow_run_33602086696_attempt_2:
+    result: SUCCESS
+    configure_pages: PASS
+    upload_site_artifact: PASS
+    deploy_pages: PASS
+    artifact_scope: site/
+  status: PASS
+  note: formal workflow publishes only site/; branch/Jekyll source is no longer the selected Pages source
+supabase_live:
+  data_api_exposed_schema: PASS
+  anonymous_direct_table_access_denied: PASS
+  jwks_http: 200
+  jwks_alg: ES256
+  jwks_curve: P-256
 source_sync:
   text_runtime_configuration: PARTIAL_LIVE
   formal_checkpoint_is_canonical: true
-  missing_from_github_due_connector_transport:
+  present_on_github:
+    - Pages workflow
+    - site HTML/CSS/JS core
+    - Supabase migrations
+    - schema.sql
+    - shared Supabase / auth / recovery / safety contracts
+  missing_from_github_due_connector_binary_or_transport_limit:
     - worker/worker.js
     - SYSTEM_MASTER.yml
     - site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_V1.0_20260902.pdf
@@ -39,4 +56,16 @@ source_sync:
     - site/staff-static.png
     - site/customer-static.png
     - site/system-check-static.png
-  note: do not claim 46/46 canonical GitHub sync until missing files are present
+  note: do not claim canonical 46/46 GitHub sync until the remaining text/binary files are present
+formal_gate:
+  g7_github_pages: PASS
+  g7_overall: HOLD
+  production_ready: false
+  remaining_major_blocks:
+    - Cloudflare Worker live deployment and secrets
+    - first production tenant / Owner auth mapping
+    - live private Storage round trip
+    - restore rehearsal
+    - LINE / Turnstile live binding
+    - production System Check all PASS
+    - device QA
