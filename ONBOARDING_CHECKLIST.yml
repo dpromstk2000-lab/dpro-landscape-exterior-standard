@@ -1,0 +1,55 @@
+system_id: dpro_landscape_exterior
+status: SHARED_DB_BOUND_DEPLOY_PENDING
+steps:
+  - id: O01
+    action: shared Supabase project selected; dedicated schema/table prefix/private bucket applied
+    status: PASS
+    blocking: false
+  - id: O02
+    action: add dpro_landscape_exterior to Data API Exposed schemas without removing existing entries
+    status: PENDING_MANUAL
+    blocking: true
+  - id: O03
+    action: verify asymmetric Auth signing key/JWKS
+    status: PENDING_LIVE
+    blocking: true
+  - id: O04
+    action: create production tenant row and first Owner Auth user
+    status: PENDING
+    blocking: true
+  - id: O05
+    action: map Owner user_id to tenant in dpro_landscape_exterior.landscape_user_access
+    status: PENDING
+    blocking: true
+  - id: O06
+    action: create GitHub repository dpro-landscape-exterior-standard and upload canonical repository pack
+    status: PENDING_USER_CREATE_REPO
+    blocking: true
+  - id: O07
+    action: create Cloudflare Worker dpro-landscape-exterior-core and bind non-secret vars + required secrets
+    status: PENDING
+    blocking: true
+  - id: O08
+    action: deploy Web surfaces with production config; bind exact origins
+    status: PENDING
+    blocking: true
+  - id: O09
+    action: configure LINE webhook URL, secret/token and verify webhook
+    status: PENDING
+    blocking: true
+  - id: O10
+    action: bind Turnstile site/secret keys and test WEB inquiry
+    status: PENDING
+    blocking: true
+  - id: O11
+    action: perform dedicated-schema/private-bucket restore rehearsal and record RPO/RTO evidence
+    status: PENDING
+    blocking: true
+  - id: O12
+    action: production System Check + critical device QA
+    status: PENDING
+    blocking: true
+  - id: O13
+    action: controlled production switch and final URL binding to sales/PDF QR assets
+    status: PENDING
+    blocking: true

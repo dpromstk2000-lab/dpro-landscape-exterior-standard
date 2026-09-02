@@ -1,0 +1,54 @@
+system_id: dpro_landscape_exterior
+deliverable: D31
+status: SHARED_SCHEMA_LIVE_RESTORE_TEST_PENDING
+recovery_targets:
+  database:
+    rpo_hours: 24
+    rto_hours: 8
+  storage_objects:
+    rpo_hours: 24
+    rto_hours: 12
+  note: Launch targets only; G7 cannot PASS until a rehearsal proves the selected recovery method.
+backup_strategy:
+  database:
+    scope: dpro_landscape_exterior schema only
+    baseline: scheduled logical export of dedicated schema/data to an off-project failure domain; do not depend on restoring unrelated DPRO schemas for product recovery
+    platform_backup: shared project platform backups may protect the whole project but product recovery must preserve isolation and avoid overwriting unrelated systems
+    enhanced_option: PITR/platform clone only when operationally available and rehearsed with shared-project impact controls
+  storage:
+    scope: dpro-landscape-exterior-private bucket only
+    requirement: separate object backup/export because database backup does not restore Storage object bytes
+    cadence: at least daily for production attachments
+    destination: separate failure domain controlled by DPRO/owner policy
+  configuration:
+    include: [Worker vars names, secret-name inventory without values, Auth URL settings, LINE webhook URL, Turnstile domain binding, bucket configuration, Data API exposed schema setting]
+restore_test:
+  required_before_g7_pass: true
+  method: restore dedicated schema logical export into an isolated non-production namespace/project + restore sampled dedicated bucket objects + staging/read-only Worker smoke
+  shared_project_safety: never overwrite or rollback unrelated schemas/tables during rehearsal
+  evidence_file: G7_RESTORE_REHEARSAL_RESULT.txt
+  status: PENDING_REHEARSAL
+migration:
+  initial_schema: schema.sql
+  live_migrations:
+    - 20260902052719_create_dpro_landscape_exterior_schema.sql
+    - 20260902053158_index_dpro_landscape_exterior_foreign_keys.sql
+  rules:
+    - migration may create/alter only dpro_landscape_exterior objects or the dedicated Storage bucket unless explicit change control says otherwise
+    - run scoped precheck before every migration
+    - take/verify backup before destructive or irreversible change
+    - prefer additive/backward-compatible phase first
+    - deploy code compatible with old/new shape before cleanup
+    - record migration id, operator, UTC/JST timestamp, pre/post checks
+rollback:
+  application: deploy previous known-good Worker/Web version while leaving compatible additive DB changes in place
+  database: prefer forward-fix inside dpro_landscape_exterior; never restore the whole shared project just to fix this product without explicit multi-system recovery approval
+  storage: never delete object as part of ordinary app rollback; orphan cleanup is separate audited job
+ownership:
+  technical_recovery: DPRO admin
+  business_cutover_approval: tenant owner
+  shared_project_boundary_approval: DPRO central admin
+  storage_recovery: DPRO admin with tenant owner scope approval
+references:
+  - https://supabase.com/docs/guides/platform/backups
+  - https://supabase.com/docs/guides/platform/clone-project

@@ -1,0 +1,23 @@
+system_id: dpro_landscape_exterior
+status: PREBIND_IMPLEMENTED
+webhook:
+  path: /api/landscape/v1/line/webhook
+  signature_header: x-line-signature
+  verification: HMAC-SHA256 over raw request body with LINE_CHANNEL_SECRET
+  source_ip_allowlist_as_auth: false
+  duplicate_key: webhookEventId
+  duplicate_store: landscape_integration_events
+intake:
+  text_message: creates LINE inquiry
+  image_message: downloads content with channel access token, validates MIME/12MiB, stores privately, then creates inquiry attachment reference
+outbound:
+  queue: landscape_notifications
+  dedupe: unique tenant_id + event_key
+  states: [queued, sending, sent, failed, cancelled]
+  retry_policy: failed items require explicit retry/reconciliation; ambiguous sending is never auto-replayed blindly
+core_failure_policy: LINE failure does not roll back case/estimate/completion core state
+live_binding_required:
+  - Messaging API channel secret
+  - channel access token
+  - exact Worker webhook URL registered in LINE Developers Console
+  - webhook verification test PASS

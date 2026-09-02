@@ -1,0 +1,27 @@
+system_id: dpro_landscape_exterior
+status: PREBIND_IMPLEMENTED
+bucket:
+  name: dpro-landscape-exterior-private
+  public: false
+  max_bytes: 12582912
+  mime_allowlist: [image/jpeg, image/png, image/webp]
+path_scope: "<tenant_id>/cases/<case_id>/<photo_point_id>/<phase>/<uuid>.<ext>"
+upload:
+  method: Supabase signed upload URL
+  created_by: Worker after authenticated case-scope check
+  expires_seconds: 7200
+  browser_receives_server_secret: false
+  upsert: false
+download:
+  method: Supabase signed download URL
+  created_by: Worker after role/case/shared-photo check
+  default_expires_seconds: 900
+line_image_intake:
+  method: LINE content API -> Worker -> private Storage
+  max_bytes: 12582912
+  allowed_mime: [image/jpeg, image/png, image/webp]
+remaining_live_evidence:
+  - signed upload with real project
+  - signed download with real project
+  - unauthorized cross-case path denied
+  - storage object recovery rehearsal

@@ -1,0 +1,22 @@
+system_id: dpro_landscape_exterior
+evidence_type: github_live_binding
+verified_at: 2026-09-02T15:44:00+09:00
+repository:
+  full_name: dpromstk2000-lab/dpro-landscape-exterior-standard
+  visibility: public
+  default_branch: main
+  app_installation_account: dpromstk2000-lab
+checks:
+  repository_exists: PASS
+  github_app_installed: PASS
+  repository_visible_to_installation: PASS
+  write_test: PASS
+  previous_403_resolved: PASS
+source_sync:
+  status: IN_PROGRESS
+  expected_text_and_binary_files: 46
+  note: formal commit SHA recorded after canonical tree is pushed
+remaining:
+  - canonical source commit
+  - GitHub Pages workflow execution
+  - public Pages URL verification

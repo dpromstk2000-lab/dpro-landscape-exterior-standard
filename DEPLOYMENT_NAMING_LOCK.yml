@@ -1,0 +1,14 @@
+deployment_naming_lock:
+  system_id: dpro_landscape_exterior
+  repository:
+    name: dpro-landscape-exterior-standard
+    purpose: canonical source + public static assets
+    owner: dpromstk2000-lab
+    full_name: dpromstk2000-lab/dpro-landscape-exterior-standard
+  cloudflare_worker:
+    name: dpro-landscape-exterior-core
+    purpose: authenticated API core
+  supabase:
+    project_ref: cbknucemarcpbscirzyv
+    schema: dpro_landscape_exterior
+  locked: true

@@ -1,0 +1,17 @@
+name = "dpro-landscape-exterior-core"
+main = "worker.js"
+compatibility_date = "2026-09-02"
+
+[vars]
+APP_ENV = "production"
+SUPABASE_URL = "https://cbknucemarcpbscirzyv.supabase.co"
+SUPABASE_SCHEMA = "dpro_landscape_exterior"
+ALLOWED_ORIGINS = "https://__PUBLIC_WEB_HOST__"
+PUBLIC_TENANT_ID = "__PRODUCTION_TENANT_UUID__"
+PHOTO_BUCKET = "dpro-landscape-exterior-private"
+PUBLIC_INQUIRY_GUARD = "turnstile"
+PRODUCTION_WRITE_ENABLED = "false"
+PUBLIC_INQUIRY_ENABLED = "false"
+
+[secrets]
+required = [ "SUPABASE_SECRET_KEY", "LINE_CHANNEL_SECRET", "LINE_CHANNEL_ACCESS_TOKEN", "TURNSTILE_SECRET_KEY" ]

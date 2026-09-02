@@ -1,0 +1,38 @@
+system_id: dpro_landscape_exterior
+status: SHARED_DB_BOUND_NOT_SWITCHED
+safe_default:
+  PRODUCTION_WRITE_ENABLED: false
+  PUBLIC_INQUIRY_ENABLED: false
+preconditions:
+  - shared Supabase project ACTIVE_HEALTHY and isolation binding evidence PASS
+  - dpro_landscape_exterior schema applied; 19/19 RLS and dedicated grants PASS
+  - Data API exposes dpro_landscape_exterior while existing exposed schemas remain unchanged
+  - Auth signing key is asymmetric and JWKS reachable
+  - owner/staff/customer test accounts mapped via dedicated landscape_user_access
+  - private Storage signed upload/download PASS
+  - backup method active and restore rehearsal PASS
+  - Worker required secrets configured; no secret in source/vars
+  - exact CORS origins configured
+  - LINE webhook verification PASS
+  - Turnstile production domain PASS
+  - production System Check all PASS except controlled switches
+  - PC/tablet/mobile critical journey smoke PASS
+switch_order:
+  - deploy Worker with writes false and inquiry false
+  - deploy Web with production config and validate login/read-only
+  - enable PRODUCTION_WRITE_ENABLED=true
+  - execute controlled owner/staff/customer mutation smoke
+  - enable PUBLIC_INQUIRY_ENABLED=true
+  - send controlled WEB inquiry and LINE text/image inquiry
+  - re-run production System Check and record evidence
+rollback_trigger:
+  - cross-tenant exposure
+  - auth/JWKS failure after deploy
+  - duplicate side-effect burst
+  - persistent 5xx on critical mutation
+  - data integrity mismatch
+rollback_action:
+  - set PRODUCTION_WRITE_ENABLED=false immediately
+  - set PUBLIC_INQUIRY_ENABLED=false if public edge implicated
+  - deploy previous Worker/Web version
+  - preserve unrelated shared Supabase schemas; forward-fix only dedicated schema unless multi-system recovery is explicitly approved

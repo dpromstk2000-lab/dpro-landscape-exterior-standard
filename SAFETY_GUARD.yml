@@ -1,0 +1,55 @@
+system_id: dpro_landscape_exterior
+version: 1.0.0-g7-shared-bind
+guards:
+  secret_guard:
+    status: implemented
+    evidence: [worker.js, config.production.template.js, wrangler.production.template.toml, .gitignore]
+    rule: secrets only through Worker secret bindings; frontend receives publishable/site keys only
+  jwt_signature_guard:
+    status: implemented_prebind
+    evidence: [worker.js, AUTH_ROLE_MATRIX.yml, g7_core_test.mjs]
+    rule: production verifies issuer/audience/expiration/signature through Supabase JWKS; HS256 denied by default
+  authorization_mapping:
+    status: implemented_shared_db_bound
+    evidence: [worker.js, schema.sql, AUTH_ROLE_MATRIX.yml]
+    rule: verified sub is mapped to tenant/role in landscape_user_access; browser claims are not trusted
+  demo_production_separation:
+    status: implemented
+    evidence: [worker.js, g7_core_test.mjs]
+    rule: demo tokens/memory disabled in production
+  production_mutation_guard:
+    status: implemented
+    evidence: [worker.js, g7_core_test.mjs]
+    rule: production mutations blocked unless PRODUCTION_WRITE_ENABLED=true
+  tenant_isolation:
+    status: implemented_shared_db_bound
+    evidence: [worker.js, AUTH_ROLE_MATRIX.yml]
+  destructive_guard:
+    status: implemented
+    evidence: [worker.js, g7_core_test.mjs]
+    rule: case delete is soft delete; owner + exact DELETE:<case_id> confirmation
+  audit_log:
+    status: implemented_shared_db_bound
+    evidence: [worker.js, schema.sql]
+  required_photo_guard:
+    status: implemented
+    evidence: [worker.js, g7_core_test.mjs]
+  private_photo_storage:
+    status: bucket_live_route_test_pending
+    evidence: [worker.js, schema.sql, STORAGE_INTEGRATION_CONTRACT.yml]
+    rule: private bucket + case-scoped signed URLs + MIME/12MiB allowlist
+  public_inquiry_abuse_guard:
+    status: implemented_prebind
+    evidence: [worker.js, index.html]
+    rule: production WEB inquiry requires Turnstile when enabled
+  line_webhook_guard:
+    status: implemented_prebind
+    evidence: [worker.js, LINE_INTEGRATION_CONTRACT.yml]
+    rule: raw body HMAC-SHA256 x-line-signature verification + event dedupe
+remaining_for_g7_live_evidence:
+  - real Supabase migration/postcheck
+  - real signed upload/download and cross-case denial
+  - real LINE webhook and outbound notification
+  - real Turnstile domain verification
+  - restore rehearsal
+  - production System Check PASS

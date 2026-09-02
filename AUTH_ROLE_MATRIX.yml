@@ -1,0 +1,48 @@
+system_id: dpro_landscape_exterior
+version: 1.0.0-g7-shared-bind
+auth:
+  demo:
+    enabled_when: APP_ENV != production
+    tokens:
+      demo-owner: owner
+      demo-staff: staff
+      demo-customer: customer
+      demo-admin: dpro_admin
+  production:
+    provider: Supabase Auth
+    bearer: Supabase access token JWT
+    preferred_signing: asymmetric ES256 or RS256
+    verifier: SUPABASE_URL + /auth/v1/.well-known/jwks.json
+    required_verified_claims: [iss, aud=authenticated, exp, sub]
+    authorization_source: landscape_user_access
+    browser_authorization_claims_trusted: false
+    legacy_hs256:
+      default: denied
+      emergency_flag: DPRO_ALLOW_LEGACY_HS256=true
+      note: transitional escape hatch only; not READY default
+roles:
+  customer:
+    scope: own customer_id + own cases
+    allowed: [list_own_cases, read_own_case, upload_own_case_photo, respond_estimate, respond_completion]
+    denied: [other_customer_data, internal_notes, assign_staff, create_estimate, tenant_settings]
+  owner:
+    scope: tenant
+    allowed: [manage_cases, estimates, schedules, assignments, followups, notifications, system_check]
+    denied: [cross_tenant, bypass_audit, hard_delete_core]
+  staff:
+    scope: assigned cases
+    allowed: [read_assigned_case, survey, signed_photo_upload, work_log, permitted_transition, completion_submit]
+    denied: [unassigned_case, pricing_edit, role_settings, hard_delete]
+  dpro_admin:
+    scope: support_scoped tenant mapping
+    allowed: [system_check, diagnostics]
+    denied: [unscoped_tenant_browse, silent_impersonation]
+server_side_enforcement:
+  - JWT signature/issuer/audience/expiration are verified before authorization
+  - verified sub is resolved against landscape_user_access
+  - tenant_id and dpro_role are never accepted from browser request body or unverified metadata
+  - case scope checked before details/mutations
+  - transition allowlist enforced server-side
+  - staff transition subset enforced server-side
+  - estimate/completion response restricted by role and current state
+  - service/secret key never appears in frontend

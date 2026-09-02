@@ -1,0 +1,15 @@
+system_id: dpro_landscape_exterior
+project_ref: cbknucemarcpbscirzyv
+rule: shared_project_advisories_are_scoped_before_action
+product_schema: dpro_landscape_exterior
+product_actions_completed:
+  - checked all dedicated foreign-key indexes; missing count reduced to 0
+  - verified all 19 dedicated tables have RLS enabled
+  - verified anon/authenticated have no direct table SELECT grants
+shared_project_advisory_not_auto_changed:
+  id: auth_leaked_password_protection
+  reason: project-global Auth setting shared by other DPRO systems; changing it exceeds the dedicated-schema isolation boundary
+  disposition: OWNER_PLATFORM_DECISION_NOT_G7_PRODUCT_DEFECT
+  reference: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+other_schema_advisories:
+  disposition: OUT_OF_SCOPE_DO_NOT_TOUCH

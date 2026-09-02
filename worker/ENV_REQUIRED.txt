@@ -1,0 +1,18 @@
+DPRO 造園・外構 Worker environment
+
+NON-SECRETS
+APP_ENV=production
+SUPABASE_URL=https://cbknucemarcpbscirzyv.supabase.co
+SUPABASE_SCHEMA=dpro_landscape_exterior
+PHOTO_BUCKET=dpro-landscape-exterior-private
+ALLOWED_ORIGINS=<exact GitHub Pages or production web origin>
+PUBLIC_TENANT_ID=<first production tenant UUID>
+PUBLIC_INQUIRY_GUARD=turnstile
+PRODUCTION_WRITE_ENABLED=false
+PUBLIC_INQUIRY_ENABLED=false
+
+SECRETS — set in Cloudflare Secrets, never commit values
+SUPABASE_SECRET_KEY
+LINE_CHANNEL_SECRET
+LINE_CHANNEL_ACCESS_TOKEN
+TURNSTILE_SECRET_KEY

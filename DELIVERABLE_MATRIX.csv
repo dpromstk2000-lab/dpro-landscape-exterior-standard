@@ -1,0 +1,32 @@
+﻿id,deliverable,default_requirement,blocking_gate,owner,na_allowed,acceptance
+D01,SYSTEM_MASTER,required,G3,FACTORY_CENTRAL,no,Master instance + lock metadata
+D02,SYSTEM_BLUEPRINT,required,G1,FACTORY_CENTRAL,no,customer/owner/staff/LINE/WEB/DATA journeys
+D03,FEATURE_SELECTION,required,G2,FACTORY_CENTRAL,no,best practice IDs + adoption reason
+D04,KILLER_FEATURE_SPEC,required,G2,FACTORY_CENTRAL,no,>=1 selected killer feature
+D05,SYSTEM_CORE,required,G4,BUILD,no,core runtime evidence
+D06,CUSTOMER_SCREEN,required,G4,BUILD,conditional,N/A only when no customer-facing workflow
+D07,OWNER_SCREEN,required,G4,BUILD,no,owner primary operations
+D08,STAFF_IPAD_SCREEN,required,G4,BUILD,yes,N/A/optional reason required
+D09,PUBLIC_DEMO,required,G4,BUILD,yes,N/A only with CENTRAL approved no-demo reason
+D10,DEMO_PREPARE,required,G4,BUILD,yes,demo data prepare evidence
+D11,SYSTEM_CHECK,required,G4,BUILD,no,blocking checks PASS
+D12,AUTH_ROLE,required,G4,BUILD,no,role/data scope evidence
+D13,SAFETY_GUARD,required,G4,BUILD,no,destructive/public/demo guards
+D14,TUTORIAL,required,G6,SUPPORT,no,interactive or in-product tutorial
+D15,GUIDE_CENTER,required,G6,SUPPORT,no,start/resume/replay where applicable
+D16,QUICK_START_PDF,required,G6,SUPPORT,no,short A4 PDF
+D17,DETAILED_MANUAL_PDF,required,G6,SUPPORT,no,full operation PDF
+D18,PRODUCT_SITE,required,G5,SALES,no,claims bound to master
+D19,OFFICIAL_SITE,required,G5,SALES,no,claims bound to master
+D20,LP,required,G5,SALES,no,sales narrative + CTA
+D21,A4_FLYER,required,G5,SALES,no,A4 sales sheet
+D22,SALES_COPY,required,G5,SALES,no,claim registry aligned
+D23,READY_REGISTRATION,required,G7,READY,no,registration + onboarding + production switch
+D24,QA_RESULT,required,G8,QA,no,all blocking checks + evidence index
+D25,FINAL_LOCK_RECORD,required,G9,FACTORY_CENTRAL,no,hashes/status/approved matrix snapshot
+D26,SURFACE_TRUST_MAP,required,G3,FACTORY_CENTRAL,yes,Every surface classified public/authenticated/internal; actor and exposure declared
+D27,STATE_TRANSITION_CONTRACT,required,G3,FACTORY_CENTRAL,yes,Lifecycle entities list allowed/denied transitions and history policy
+D28,INTEGRATION_RESILIENCE_CONTRACT,required,G3,FACTORY_CENTRAL,yes,Timeout/unavailable behavior; side effects include idempotency/dedup decision
+D29,DATA_LIFECYCLE_CONTRACT,required,G3,FACTORY_CENTRAL,yes,Retention/export/delete-or-anonymize/legal-hold decision by data category
+D30,OPERATIONAL_QUALITY_RESULT,required,G8,QA,no,Browser declaration + accessibility critical checks + performance target/evidence
+D31,RECOVERY_MIGRATION_PLAN,required,G7,READY,yes,Backup/restore/migration/rollback/recovery ownership and RPO-RTO decision where applicable

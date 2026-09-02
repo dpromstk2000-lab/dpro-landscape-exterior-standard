@@ -1,0 +1,55 @@
+system_id: dpro_landscape_exterior
+evidence_type: shared_supabase_live_binding
+verified_at: 2026-09-02T14:24:00+09:00
+project:
+  name: liff-salon-reserve
+  ref: cbknucemarcpbscirzyv
+  url: https://cbknucemarcpbscirzyv.supabase.co
+  mode: shared_project_isolated_schema
+namespace:
+  schema: dpro_landscape_exterior
+  table_prefix: landscape_
+  storage_bucket: dpro-landscape-exterior-private
+live_migrations:
+  - version: '20260902052719'
+    name: create_dpro_landscape_exterior_schema
+    result: PASS
+  - version: '20260902053158'
+    name: index_dpro_landscape_exterior_foreign_keys
+    result: PASS
+checks:
+  dedicated_tables: 19
+  rls_enabled_tables: 19
+  missing_fk_indexes: 0
+  public_landscape_tables: 0
+  initial_tenant_rows: 0
+  initial_case_rows: 0
+  private_bucket_count: 1
+  anon_schema_usage: false
+  authenticated_schema_usage: false
+  service_role_schema_usage: true
+  all_19_anon_select: false
+  all_19_authenticated_select: false
+  all_19_service_role_crud: true
+  transaction_smoke:
+    tenant: PASS
+    customer: PASS
+    site: PASS
+    case: PASS
+    photo_point: PASS
+    estimate: PASS
+    rollback: PASS
+    rows_remaining: 0
+isolation_assertion:
+  existing_public_tables_modified: false
+  existing_other_dpro_schema_objects_modified: false
+  existing_other_dpro_business_data_read_or_written: false
+  dental_project_modified: false
+remaining_live_requirements:
+  - add dpro_landscape_exterior to Data API Exposed schemas without removing existing schemas
+  - verify JWKS/asymmetric signing live
+  - provision first production tenant and Owner/Auth mapping
+  - deploy Worker and Web surfaces
+  - bind LINE and Turnstile
+  - execute restore rehearsal
+  - production System Check and device QA

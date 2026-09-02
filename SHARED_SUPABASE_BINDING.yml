@@ -1,0 +1,25 @@
+shared_supabase_binding:
+  system_id: dpro_landscape_exterior
+  status: LIVE_BOUND
+  project_name: liff-salon-reserve
+  project_ref: cbknucemarcpbscirzyv
+  project_url: https://cbknucemarcpbscirzyv.supabase.co
+  mode: shared_project_isolated_schema
+  dedicated_schema: dpro_landscape_exterior
+  table_prefix: landscape_
+  storage_bucket: dpro-landscape-exterior-private
+  data_api:
+    direct_client_access: false
+    worker_server_access_only: true
+    required_profile_header: dpro_landscape_exterior
+    exposed_schema_setting: USER_CONFIRMED_ADDED_LIVE_API_VERIFY_PENDING
+  isolation_rules:
+  - do_not_modify_public_existing_objects
+  - do_not_modify_other_dpro_schemas
+  - do_not_read_or_write_other_dpro_business_data
+  - do_not_reuse_other_system_table_prefixes
+  - no_anon_or_authenticated_direct_table_grants
+  live_binding_status: PASS
+  live_migrations:
+  - '20260902052719'
+  - '20260902053158'
