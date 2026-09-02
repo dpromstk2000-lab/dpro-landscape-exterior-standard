@@ -1,6 +1,6 @@
 system_id: dpro_landscape_exterior
 evidence_type: shared_supabase_live_binding
-verified_at: 2026-09-02T14:24:00+09:00
+verified_at: 2026-09-02T16:09:52+09:00
 project:
   name: liff-salon-reserve
   ref: cbknucemarcpbscirzyv
@@ -22,8 +22,6 @@ checks:
   rls_enabled_tables: 19
   missing_fk_indexes: 0
   public_landscape_tables: 0
-  initial_tenant_rows: 0
-  initial_case_rows: 0
   private_bucket_count: 1
   anon_schema_usage: false
   authenticated_schema_usage: false
@@ -31,6 +29,19 @@ checks:
   all_19_anon_select: false
   all_19_authenticated_select: false
   all_19_service_role_crud: true
+  data_api_exposed_schema_live:
+    status: PASS
+    accept_profile: dpro_landscape_exterior
+    result_http: 401
+    result_code: '42501'
+    result_message: permission denied for schema dpro_landscape_exterior
+    interpretation: schema is exposed to PostgREST while anon direct access remains denied
+  jwks_live:
+    status: PASS
+    http: 200
+    alg: ES256
+    kty: EC
+    crv: P-256
   transaction_smoke:
     tenant: PASS
     customer: PASS
@@ -46,10 +57,9 @@ isolation_assertion:
   existing_other_dpro_business_data_read_or_written: false
   dental_project_modified: false
 remaining_live_requirements:
-  - add dpro_landscape_exterior to Data API Exposed schemas without removing existing schemas
-  - verify JWKS/asymmetric signing live
   - provision first production tenant and Owner/Auth mapping
   - deploy Worker and Web surfaces
+  - live private Storage signed upload/download route smoke
   - bind LINE and Turnstile
   - execute restore rehearsal
   - production System Check and device QA
