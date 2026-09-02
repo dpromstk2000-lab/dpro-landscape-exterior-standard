@@ -1,18 +1,26 @@
 DPRO 造園・外構 Worker environment
 
-NON-SECRETS
+STAGE-1 NON-SECRETS
 APP_ENV=production
 SUPABASE_URL=https://cbknucemarcpbscirzyv.supabase.co
 SUPABASE_SCHEMA=dpro_landscape_exterior
 PHOTO_BUCKET=dpro-landscape-exterior-private
-ALLOWED_ORIGINS=<exact GitHub Pages or production web origin>
+ALLOWED_ORIGINS=https://dpromstk2000-lab.github.io
 PUBLIC_TENANT_ID=<first production tenant UUID>
 PUBLIC_INQUIRY_GUARD=turnstile
 PRODUCTION_WRITE_ENABLED=false
 PUBLIC_INQUIRY_ENABLED=false
 
-SECRETS — set in Cloudflare Secrets, never commit values
+STAGE-1 REQUIRED SECRET — set in Cloudflare Secrets, never commit value
 SUPABASE_SECRET_KEY
+
+STAGE-2 INTEGRATION SECRETS — add later before enabling each integration
 LINE_CHANNEL_SECRET
 LINE_CHANNEL_ACCESS_TOKEN
 TURNSTILE_SECRET_KEY
+
+RULES
+- Never paste secret values into chat.
+- Keep PRODUCTION_WRITE_ENABLED=false until controlled production switch.
+- Keep PUBLIC_INQUIRY_ENABLED=false until Turnstile live verification passes.
+- ALLOWED_ORIGINS must contain origin only, never a path and never wildcard in production.
