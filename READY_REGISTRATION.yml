@@ -3,7 +3,7 @@ ready_registration:
   system_version: 1.0.0
   runtime_build: 1.0.0-g7-shared-bind
   gate: G7
-  status: SHARED_SUPABASE_BOUND_LIVE_DEPLOY_HOLD
+  status: GITHUB_PAGES_INITIAL_ENABLEMENT_HOLD
   production_ready: false
   shared_supabase:
     project_name: liff-salon-reserve
@@ -13,15 +13,19 @@ ready_registration:
     private_bucket: dpro-landscape-exterior-private
     schema_migration: PASS
     isolation_checks: PASS
-    data_api_exposed_schema: USER_CONFIRMED_ADDED_LIVE_API_VERIFY_PENDING
+    data_api_exposed_schema: LIVE_PASS
+    jwks: ES256_P256_LIVE_PASS
   tenant:
     id: TBD_FIRST_PRODUCTION_TENANT
     name: TBD_FIRST_PRODUCTION_OWNER
   deployment_naming:
     repository: dpro-landscape-exterior-standard
     worker: dpro-landscape-exterior-core
+  github:
+    repository_binding: PASS
+    pages_status: HOLD_INITIAL_OWNER_ENABLEMENT
   public_urls:
-    public_web: TBD_AFTER_GITHUB_PAGES_DEPLOY
+    public_web: TBD_AFTER_GITHUB_PAGES_ENABLEMENT_AND_DEPLOY
     customer: TBD
     owner: TBD
     staff: TBD
@@ -30,25 +34,17 @@ ready_registration:
     lp: TBD
     system_check_api: TBD_AFTER_WORKER_DEPLOY
     worker_api: TBD_AFTER_WORKER_DEPLOY
-  auth_mode: Supabase Auth asymmetric JWT/JWKS + server access mapping
+  auth_mode: Supabase Auth ES256/P-256 JWKS + server access mapping
   feature_flags:
     photo_site_record: true
     season_followup_clock: true
     line: required_pending_binding
     public_inquiry: required_pending_binding
     production_write: false_until_switch
-  onboarding_status: SHARED_DB_BOUND_REMAINING_STEPS_PENDING
-  contact_support:
-    status: PLACEHOLDER_PENDING_PRODUCTION_CONTACT
-  tutorial_guide_pdf:
-    tutorial: tutorial.html
-    guide: guide-center.html
-    quick_start: DPRO_LANDSCAPE_EXTERIOR_QUICK_START_V1.0_20260902.pdf
-    detailed_manual: DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_V1.0_20260902.pdf
   production_switch_status: BLOCKED_LIVE_DEPLOY
   blocking_live_items:
-    - verify live PostgREST access to dpro_landscape_exterior after user-confirmed Data API exposed-schema addition
-    - asymmetric signing key/JWKS confirmed
+    - enable GitHub Pages once with Source=GitHub Actions, then verify deployment
+    - complete canonical GitHub binary/worker sync
     - tenant + owner Auth/access mapping provisioned
     - private Storage signed upload/download live smoke through deployed Worker
     - Cloudflare Worker created and secrets/vars bound
