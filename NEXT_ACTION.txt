@@ -1,0 +1,14 @@
+DPRO 造園・外構 V1.0 — NEXT ACTION
+
+STANDARD PRODUCT
+次のアクション：なし（FINAL LOCK完了）
+
+契約後のみ:
+1. READY管理センターからtenantを登録。
+2. Owner Authを作成し専用tenantへ紐付け。
+3. Staff / Customer accessを設定。
+4. tenant固有LINE / TurnstileをBinding。
+5. Storage実通信・Recovery rehearsal・Tenant System Check・端末確認。
+6. controlled production switch。
+
+注意: 上記は販売製品完成工程ではなく、契約後オンボーディング工程です。
