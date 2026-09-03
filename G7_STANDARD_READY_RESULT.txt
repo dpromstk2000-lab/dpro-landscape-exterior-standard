@@ -1,0 +1,25 @@
+DPRO 造園・外構 — G7 STANDARD PRODUCT READY RESULT
+Re-evaluated: 2026-09-03
+
+PURPOSE CORRECTION
+- G7 standard product readiness is not the same as post-sale tenant go-live.
+- Real tenant / Owner email / real customer Auth are intentionally NOT created before a contract.
+
+STANDARD PRODUCT CHECKS
+PASS — Customer / Owner / Staff core implemented.
+PASS — Public Browser Demo is isolated from production DB and uses deterministic local demo state.
+PASS — Demo Prepare and Standard System Check available without real tenant data.
+PASS — Production Worker implementation and health live.
+PASS — Shared general/salon Supabase project binding with dedicated schema/table prefix/private bucket.
+PASS — Other DPRO areas are out-of-scope and unchanged.
+PASS — Data API exposed schema and ES256/P-256 JWKS verified.
+PASS — Tutorial / Guide / Quick PDF / Detailed PDF complete.
+PASS — Product Site / Official Site / LP / A4 / Sales Copy complete.
+PASS — READY Control Center and post-sale onboarding/switch templates complete.
+PASS — Recovery/migration design complete; tenant-specific rehearsal is post-sale before tenant go-live.
+PASS — Safe defaults keep production writes and public inquiry OFF.
+
+G7 RESULT: PASS
+SYSTEM STATUS AFTER G7: OPERATION_READY
+TENANT PRODUCTION READY: NO — correctly deferred to POST_SALE_ONBOARDING.
+NEXT: G8 FINAL QA.
