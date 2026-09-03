@@ -1,0 +1,29 @@
+DPRO 造園・外構 V1.0 — FINAL CENTRAL HANDOFF
+Date: 2026-09-03
+
+LOCK STATE
+- DPRO SYSTEM FACTORY pipeline G0-G9: PASS
+- SYSTEM_MASTER.status: FINAL_LOCKED
+- Standard product is saleable.
+- No real tenant/customer provisioning is part of this lock.
+
+CANONICAL STANDARD INFRASTRUCTURE
+- Supabase shared general/salon Project ref: cbknucemarcpbscirzyv
+- Dedicated schema: dpro_landscape_exterior
+- Table prefix: landscape_
+- Private bucket: dpro-landscape-exterior-private
+- Repository: dpromstk2000-lab/dpro-landscape-exterior-standard
+- Pages: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/
+- Worker: https://dpro-landscape-exterior-core.dpromstk2000.workers.dev
+
+SAFETY LOCK
+- Do not create a new Supabase Project for this system.
+- Do not alter unrelated DPRO schemas/tables/functions/storage/business data.
+- PRODUCTION_WRITE_ENABLED=false until a contracted tenant passes READY go-live.
+- PUBLIC_INQUIRY_ENABLED=false until tenant Turnstile/live validation.
+- Never commit or package real secrets.
+
+POST-SALE ONLY
+After contract, use ready-center.html / READY_REGISTRATION.yml / POST_SALE_ONBOARDING_CONTRACT.yml to create tenant + Owner Auth, bind tenant integrations, run System Check/recovery/device acceptance, then controlled switch.
+
+To resume product development, open a formal change request against this FINAL LOCK baseline. Do not silently reopen G0-G9.
