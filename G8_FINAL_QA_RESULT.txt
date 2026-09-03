@@ -1,0 +1,39 @@
+DPRO 造園・外構 — G8 FINAL QA RESULT
+Date: 2026-09-03
+
+GATE INPUT
+- G0-G7 PASS as standard product.
+- No real tenant/customer Auth data created.
+
+AUTOMATED
+PASS — Core/Security 16/16.
+PASS — Browser Demo end-to-end: Prepare -> Staff After x2 -> progress -> completion submit -> Customer approval -> Owner completed -> WEB inquiry.
+PASS — Publication-final static/operational quality 199/199; login form label findings fixed; public binary dependencies removed.
+PASS — Worker syntax / app-core syntax / all inline-script syntax.
+PASS — Local link/reference integrity.
+PASS — Accessibility critical static checks.
+PASS — Responsive breakpoint/overflow guard review for declared 320/390/768/1440 design.
+PASS — Critical runtime payload 47,366 bytes < 500 KB target.
+PASS — Sales static payload 408,125 bytes < 5 MB target.
+PASS — Candidate/HOLD sales wording removed from final public sales surfaces.
+PASS — READY Control Center visual static render after long-token wrapping fix.
+PASS — FACTORY validator errors=0 warnings=0 at G8 entry.
+
+LIVE INFRA EVIDENCE CARRIED FORWARD
+PASS — General/salon shared Supabase dedicated schema isolation.
+PASS — GitHub Pages.
+PASS — Cloudflare Worker Git deploy + health.
+
+OPEN DEFECTS
+must_fix=0
+high=0
+medium=0
+low=0
+required_missing=0
+
+POST-SALE ITEMS ARE NOT G8 DEFECTS
+Real tenant/Owner Auth, tenant LINE/Turnstile, tenant production switch and tenant go-live smoke are deferred by design to READY onboarding after contract.
+
+G8 RESULT: PASS
+SYSTEM STATUS AFTER G8: FINAL_QA
+NEXT: G9 FINAL LOCK.
