@@ -1,5 +1,5 @@
 system_id: dpro_landscape_exterior
-status: SUPABASE_LIVE_GITHUB_PAGES_ENABLEMENT_HOLD
+status: WORKER_HEALTH_PASS_OWNER_IDENTITY_HOLD
 steps:
   - id: O01
     action: shared Supabase project selected; dedicated schema/table prefix/private bucket applied
@@ -22,15 +22,15 @@ steps:
     status: PENDING
     blocking: true
   - id: O06
-    action: create/bind GitHub repository and deploy Pages
-    status: REPOSITORY_BOUND_PAGES_INITIAL_ENABLEMENT_HOLD
-    blocking: true
+    action: create/bind GitHub repository and deploy Pages through GitHub Actions
+    status: PASS
+    blocking: false
   - id: O07
-    action: create Cloudflare Worker dpro-landscape-exterior-core and bind non-secret vars + required secrets
-    status: PENDING
-    blocking: true
+    action: create Cloudflare Worker dpro-landscape-exterior-core; Git build/deploy; bind Stage-1 secret; verify production health
+    status: PASS_HEALTH
+    blocking: false
   - id: O08
-    action: deploy Web surfaces with production config; bind exact origins
+    action: deploy Web surfaces with production config; bind exact Worker API and production auth config
     status: PENDING
     blocking: true
   - id: O09
