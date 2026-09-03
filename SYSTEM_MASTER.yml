@@ -1,0 +1,114 @@
+master:
+  schema_version: factory-1.0
+  updated_at: '2026-09-03T10:00:00+09:00'
+  owner: FACTORY_CENTRAL
+  publication_mirror: true
+  canonical_full_master_location: DPRO_LANDSCAPE_EXTERIOR_V1.0_FINAL_LOCK_CENTRAL_20260903.zip
+factory:
+  name: DPRO SYSTEM FACTORY
+  version: V1.0
+  lock_status: FINAL_LOCKED
+  baseline_sha256: e13d394db9498b7fc84a7c1d80218f240a666d0d6b8a46f871d9d15b0120c8ed
+system:
+  id: dpro_landscape_exterior
+  name: DPRO 造園・外構
+  version: 1.0.0
+  status: FINAL_LOCKED
+  runtime_build: 1.0.0-g7-shared-bind
+  standard_product_final_locked: true
+  saleable: true
+  tenant_production_ready: false
+  tenant_go_live_boundary: POST_SALE_READY_ONBOARDING
+  one_sentence_value: 写真で始まる相談を、現調・見積・施工・Before→After完了承認・季節アフターまで一つの現場カルテでつなぐ。
+value_design:
+  primary_killer_feature: PHOTO SITE RECORD
+  secondary_killer_feature: SEASON FOLLOW-UP CLOCK
+  survey_estimate_evidence_link: required
+roles:
+  customer: own_case
+  owner: tenant
+  staff: assigned_case
+  dpro_admin: support_scoped
+standard_product_surfaces:
+  browser_demo: PASS
+  owner: PASS
+  staff: PASS
+  customer: PASS
+  api: PASS
+  db: PASS
+  storage: PASS
+  system_check: PASS
+  tutorial: PASS
+  guide: PASS
+  product_site: PASS
+  official_site: PASS
+  lp: PASS
+  a4_flyer: PASS
+  ready_center: PASS
+shared_supabase:
+  policy: EXISTING_GENERAL_SALON_SHARED_PROJECT_ONLY
+  project_ref: cbknucemarcpbscirzyv
+  schema: dpro_landscape_exterior
+  table_prefix: landscape_
+  dedicated_tables: 19
+  rls_enabled_tables: 19
+  private_bucket: dpro-landscape-exterior-private
+  new_project_created: false
+  other_dpro_business_data_modified: false
+  real_tenant_rows_at_lock: 0
+  real_owner_auth_created_for_product_lock: false
+deployment:
+  github_repository: dpromstk2000-lab/dpro-landscape-exterior-standard
+  github_pages: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/
+  pages_source: GitHub Actions
+  cloudflare_worker_name: dpro-landscape-exterior-core
+  cloudflare_worker: https://dpro-landscape-exterior-core.dpromstk2000.workers.dev
+  worker_health: PASS
+  production_write_enabled: false
+  public_inquiry_enabled: false
+qa:
+  core_security: 16/16 PASS
+  browser_demo_e2e: PASS
+  publication_final_static_operational_quality: 199/199 PASS
+  pdf_pages_verified: 17/17 PASS
+  factory_validator: errors=0 warnings=0
+  must_fix_open: 0
+  high_open: 0
+  required_missing: 0
+gates:
+  G0: PASS
+  G1: PASS
+  G2: PASS
+  G3: PASS
+  G4: PASS
+  G5: PASS
+  G6: PASS
+  G7: PASS
+  G8: PASS
+  G9: PASS
+recovery_migration:
+  standard_design: PASS
+  database_rpo_hours: 24
+  database_rto_hours: 8
+  storage_rpo_hours: 24
+  storage_rto_hours: 12
+  tenant_specific_rehearsal: POST_SALE_BEFORE_PRODUCTION_SWITCH
+post_sale_ready:
+  required_inputs:
+    - tenant name/id
+    - Owner Auth/email
+    - Staff/Customer access
+    - tenant LINE credentials when enabled
+    - tenant Turnstile credentials when enabled
+  gate:
+    - REGISTER
+    - BIND
+    - CHECK
+    - SWITCH
+  production_switch_requires_approval: true
+final_lock:
+  record: FINAL_LOCK_RECORD.yml
+  g7_evidence: G7_STANDARD_READY_RESULT.txt
+  g8_evidence: G8_FINAL_QA_RESULT.txt
+  g9_evidence: G9_FINAL_LOCK_RESULT.txt
+  full_artifact_set: DPRO_LANDSCAPE_EXTERIOR_V1.0_FINAL_LOCK_CENTRAL_20260903.zip
