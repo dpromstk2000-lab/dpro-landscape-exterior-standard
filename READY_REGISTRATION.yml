@@ -3,8 +3,10 @@ ready_registration:
   system_version: 1.0.0
   runtime_build: 1.0.0-g7-shared-bind
   gate: G7
-  status: GITHUB_PAGES_INITIAL_ENABLEMENT_HOLD
-  production_ready: false
+  status: STANDARD_PRODUCT_READY
+  standard_product_ready: true
+  tenant_production_ready: false
+  readiness_definition: 契約後にREADY管理センターから実テナントを追加して本番切替できる販売標準製品状態
   shared_supabase:
     project_name: liff-salon-reserve
     project_ref: cbknucemarcpbscirzyv
@@ -15,42 +17,59 @@ ready_registration:
     isolation_checks: PASS
     data_api_exposed_schema: LIVE_PASS
     jwks: ES256_P256_LIVE_PASS
-  tenant:
-    id: TBD_FIRST_PRODUCTION_TENANT
-    name: TBD_FIRST_PRODUCTION_OWNER
+    existing_dpro_area_changes: 0
+  standard_demo:
+    mode: browser_local_demo
+    persistent_store: browser_localStorage
+    production_database_write: false
+    deterministic_reset: true
+    owner_staff_customer: implemented
+    system_check: PASS
   deployment_naming:
     repository: dpro-landscape-exterior-standard
     worker: dpro-landscape-exterior-core
   github:
     repository_binding: PASS
-    pages_status: HOLD_INITIAL_OWNER_ENABLEMENT
+    pages_source: GitHub Actions
+    pages_status: PASS
+    public_url: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/
+  cloudflare:
+    worker_status: PASS_HEALTH
+    worker_url: https://dpro-landscape-exterior-core.dpromstk2000.workers.dev
+    safe_default_writes: false
+    safe_default_public_inquiry: false
   public_urls:
-    public_web: TBD_AFTER_GITHUB_PAGES_ENABLEMENT_AND_DEPLOY
-    customer: TBD
-    owner: TBD
-    staff: TBD
-    product_site: TBD
-    official_site: TBD
-    lp: TBD
-    system_check_api: TBD_AFTER_WORKER_DEPLOY
-    worker_api: TBD_AFTER_WORKER_DEPLOY
+    demo: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/
+    customer_demo: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/customer.html
+    owner_demo: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/owner.html
+    staff_demo: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/staff.html
+    product_site: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/product-site.html
+    official_site: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/official-site.html
+    lp: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/lp.html
+    ready_center: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/ready-center.html
+    worker_health: https://dpro-landscape-exterior-core.dpromstk2000.workers.dev/api/landscape/v1/health
   auth_mode: Supabase Auth ES256/P-256 JWKS + server access mapping
-  feature_flags:
-    photo_site_record: true
-    season_followup_clock: true
-    line: required_pending_binding
-    public_inquiry: required_pending_binding
-    production_write: false_until_switch
-  production_switch_status: BLOCKED_LIVE_DEPLOY
-  blocking_live_items:
-    - enable GitHub Pages once with Source=GitHub Actions, then verify deployment
-    - complete canonical GitHub binary/worker sync
-    - tenant + owner Auth/access mapping provisioned
-    - private Storage signed upload/download live smoke through deployed Worker
-    - Cloudflare Worker created and secrets/vars bound
-    - exact production web origins and URLs deployed/reachable
-    - LINE Messaging API webhook/token bound and verified
-    - Turnstile site/secret keys bound
-    - restore rehearsal evidence captured
-    - production System Check all PASS
-    - critical PC/tablet/mobile QA on public URLs PASS
+  post_sale_inputs:
+    tenant_id: CREATE_AFTER_CONTRACT
+    tenant_name: ENTER_AFTER_CONTRACT
+    owner_email: ENTER_AFTER_CONTRACT
+    owner_auth_user: CREATE_AFTER_CONTRACT
+    staff_accounts: CREATE_AS_CONTRACTED
+    line_credentials: BIND_IF_ENABLED
+    turnstile_credentials: BIND_IF_PUBLIC_INQUIRY_ENABLED
+  post_sale_artifacts:
+    - ready-center.html
+    - POST_SALE_ONBOARDING_CONTRACT.yml
+    - TENANT_ONBOARDING_SQL_TEMPLATE.sql
+    - PRODUCTION_SWITCH_CHECKLIST.yml
+    - config.production.template.js
+    - SYSTEM_CHECK_CONTRACT.yml
+  product_gate_blockers: []
+  tenant_go_live_blockers:
+    - real tenant + Owner Auth/access mapping
+    - production web auth configuration
+    - tenant-specific signed Storage round-trip
+    - LINE/Turnstile binding when enabled
+    - tenant production System Check
+    - tenant device QA
+    - production switch approval
