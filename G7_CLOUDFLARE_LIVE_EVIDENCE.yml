@@ -1,0 +1,29 @@
+system_id: dpro_landscape_exterior
+evidence_type: cloudflare_worker_live
+verified_at: 2026-09-03T09:11:00+09:00
+worker:
+  name: dpro-landscape-exterior-core
+  public_url: https://dpro-landscape-exterior-core.dpromstk2000.workers.dev
+  git_repository: dpromstk2000-lab/dpro-landscape-exterior-standard
+  production_branch: main
+  root_directory: worker
+  deploy_command: npx wrangler deploy
+  trigger_commit: afc45bd9ec6b44d4ea6d8019154a751f7c0916a8
+  cloudflare_active_version: a48fb1d0
+checks:
+  git_connection: PASS
+  build: PASS
+  deployment_active: PASS
+  supabase_secret_present: PASS_CONFIRMED_BY_OWNER_UI
+  health_endpoint: PASS_CONFIRMED_LIVE_RESPONSE
+health_response:
+  ok: true
+  system_id: dpro_landscape_exterior
+  version: 1.0.0-g7-shared-bind
+  environment: production
+safety:
+  production_write_enabled: false
+  public_inquiry_enabled: false
+  formal_g7_ready: false
+next_blocker:
+  production_tenant_and_first_owner_identity: REQUIRED
