@@ -1,0 +1,9 @@
+DPRO 造園・外構 — G9 FINAL REGRESSION
+Date: 2026-09-03
+RESULT: PASS
+
+- Browser Demo E2E: PASS
+- Core/Security: 16/16 PASS
+- Static/Operational quality: 199/199 PASS
+- FACTORY validator: errors=0 warnings=0
+- PDF final render/visual verification: PASS
