@@ -1,0 +1,18 @@
+DPRO 造園・外構 — GITHUB PUBLICATION ASSET VERIFICATION
+Date: 2026-09-03
+
+PUBLICATION POLICY
+- GitHub Pages is the saleable Browser Demo / product information surface.
+- Public Pages uses self-contained HTML/CSS UI previews so no binary screenshot dependency can 404.
+- FINAL print assets remain canonical in FINAL LOCK CENTRAL: A4 flyer 1p / Quick Start 4p / Detailed Manual 12p.
+- Public Guide/READY explicitly state that the print PDFs are included in FINAL LOCK CENTRAL instead of linking to absent binaries.
+- Browser Demo does not create production tenant/Auth/business data.
+
+EXPECTED PUBLIC REFERENCES
+- owner-static.png: not required by Pages
+- staff-static.png: not required by Pages
+- customer-static.png: not required by Pages
+- system-check-static.png: not required by Pages
+- PDF binaries: not required by Pages; canonical in CENTRAL
+
+RESULT: PASS — publication has no required binary-file dependency.
