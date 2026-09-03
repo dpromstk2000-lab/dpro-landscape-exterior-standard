@@ -1,0 +1,56 @@
+final_lock_record:
+  system_id: dpro_landscape_exterior
+  system_name: DPRO 造園・外構
+  version: 1.0.0
+  locked_at: '2026-09-03T09:56:31+09:00'
+  factory_baseline:
+    name: DPRO SYSTEM FACTORY V1.0 FINAL LOCKED CENTRAL
+    sha256: e13d394db9498b7fc84a7c1d80218f240a666d0d6b8a46f871d9d15b0120c8ed
+  decision: STANDARD_PRODUCT_FINAL_LOCKED
+  gate_results: {G0: PASS, G1: PASS, G2: PASS, G3: PASS, G4: PASS, G5: PASS, G6: PASS, G7: PASS, G8: PASS, G9: PASS}
+  standard_product:
+    saleable: true
+    browser_demo_ready: true
+    ready_control_center_ready: true
+    tenant_go_live_provisioned: false
+    tenant_go_live_boundary: POST_SALE_READY_ONBOARDING
+  live_standard_infrastructure:
+    github_repository: dpromstk2000-lab/dpro-landscape-exterior-standard
+    github_pages: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/
+    cloudflare_worker: https://dpro-landscape-exterior-core.dpromstk2000.workers.dev
+    worker_health: PASS
+    shared_supabase_project_ref: cbknucemarcpbscirzyv
+    supabase_schema: dpro_landscape_exterior
+    table_prefix: landscape_
+    storage_bucket: dpro-landscape-exterior-private
+  supabase_isolation_lock:
+    new_project_created: false
+    other_dpro_business_data_modified: false
+    dedicated_tables: 19
+    rls_enabled_tables: 19
+    real_tenant_rows_at_lock: 0
+    real_owner_auth_created_for_product_lock: false
+  safety_defaults:
+    production_write_enabled: false
+    public_inquiry_enabled: false
+    real_tenant_credentials_in_repository: false
+    real_secret_values_in_checkpoint: false
+  qa_summary:
+    core_security: 16/16 PASS
+    browser_demo_e2e: PASS
+    static_operational_quality: 212/212 PASS
+    pdf_final_verification: PASS
+    must_fix_open: 0
+    high_open: 0
+    medium_open: 0
+    low_open: 0
+    required_missing: 0
+  post_sale_ready_actions:
+    - create tenant row and Owner Auth mapping
+    - configure Staff/Customer access
+    - bind tenant LINE credentials
+    - bind tenant Turnstile credentials
+    - run tenant Storage round-trip and recovery rehearsal
+    - run Tenant Production System Check
+    - perform controlled production switch and device acceptance
+  source_sync_note: Local FINAL CENTRAL remains canonical; GitHub publication source is synchronized and verified separately in GITHUB_FINAL_SYNC_RESULT.yml.
