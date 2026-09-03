@@ -1,0 +1,12 @@
+build_status:
+  system_id: dpro_landscape_exterior
+  current_step: STEP-14
+  current_gate: G9
+  pipeline_status: COMPLETE
+  completed_steps: [STEP-0, STEP-1, STEP-2, STEP-3, STEP-4, STEP-5, STEP-6, STEP-7, STEP-8, STEP-9, STEP-10, STEP-11, STEP-12, STEP-13, STEP-14]
+  gates: {G0: PASS, G1: PASS, G2: PASS, G3: PASS, G4: PASS, G5: PASS, G6: PASS, G7: PASS, G8: PASS, G9: PASS}
+  standard_product_final_locked: true
+  saleable: true
+  tenant_production_ready: false
+  post_sale_next: READY_CONTROL_CENTER_TENANT_ONBOARDING_AFTER_CONTRACT
+  next_required_output: NONE_FOR_STANDARD_PRODUCT
