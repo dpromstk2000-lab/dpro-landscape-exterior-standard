@@ -233,4 +233,5 @@ jobs:
           name: dpro53-reaudit-passed
           path: artifact-dpro53
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 7
