@@ -1,0 +1,63 @@
+name: DPRO 53 CENTRAL FIX R1 Tool Hotfix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/dpro-53-central-fix-r1-tool-hotfix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dpro-53-central-fix-r1-tool-hotfix
+  cancel-in-progress: false
+
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch canonical FIX R1 QA tool
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tools/dpro53_central_fix_r1.py')
+          s=p.read_text(encoding='utf-8')
+          old="/* DPRO CENTRAL FIX R1: semantic Japanese headline lines */\n.hero .semantic-headline .dline"
+          new="/* DPRO CENTRAL FIX R1: semantic Japanese headline lines */\n.hero .semantic-headline{font-size:clamp(2.85rem,4vw,3.65rem)}\n.hero .semantic-headline .dline"
+          if old in s:
+              s=s.replace(old,new,1)
+          elif 'font-size:clamp(2.85rem,4vw,3.65rem)' not in s:
+              raise SystemExit('Product headline CSS hotfix signature not found')
+          old2="  const core=raw.replace(/[、。・,:：;；!?！？()（）「」『』【】\\-—―]/g,'');\n  if(core.length===1) orphans.push({heading:(e.innerText||'').trim(),line:raw});"
+          new2="  const glyphs=[...raw];\n  if(glyphs.length===1 && /[ぁ-んァ-ヶ一-龯々〆ヵヶ]/.test(glyphs[0])) orphans.push({heading:(e.innerText||'').trim(),line:raw});"
+          if old2 in s:
+              s=s.replace(old2,new2,1)
+          elif 'glyphs.length===1' not in s:
+              raise SystemExit('Orphan detector hotfix signature not found')
+          p.write_text(s,encoding='utf-8')
+          PY
+          python -m py_compile tools/dpro53_central_fix_r1.py
+          grep -q 'font-size:clamp(2.85rem,4vw,3.65rem)' tools/dpro53_central_fix_r1.py
+          grep -q 'glyphs.length===1' tools/dpro53_central_fix_r1.py
+
+      - name: Commit canonical QA logic hotfix
+        run: |
+          set -euo pipefail
+          git config user.name 'dpro-factory-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- tools/dpro53_central_fix_r1.py
+          if git diff --cached --quiet; then
+            echo 'Canonical FIX R1 QA tool already hotfixed.'
+          else
+            git commit -m 'Fix DPRO 53 CENTRAL R1 wrap QA semantics'
+            git push origin HEAD:main
+          fi
