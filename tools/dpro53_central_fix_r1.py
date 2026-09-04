@@ -67,6 +67,7 @@ A4_R1_CSS = r'''
 
 PRODUCT_R1_CSS = r'''
 /* DPRO CENTRAL FIX R1: semantic Japanese headline lines */
+.hero .semantic-headline{font-size:clamp(2.85rem,4vw,3.65rem)}
 .hero .semantic-headline .dline{display:block;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}
 .hero .semantic-headline .dline-mobile{display:none}
 @media(max-width:680px){
@@ -286,8 +287,8 @@ for(const e of headingEls){
  const chars=charRects(e); const ls=groups(chars);
  for(const l of ls){
   const raw=l.chars.map(x=>x.ch).join('');
-  const core=raw.replace(/[、。・,:：;；!?！？()（）「」『』【】\-—―]/g,'');
-  if(core.length===1) orphans.push({heading:(e.innerText||'').trim(),line:raw});
+  const glyphs=[...raw];
+  if(glyphs.length===1 && /[ぁ-んァ-ヶ一-龯々〆ヵヶ]/.test(glyphs[0])) orphans.push({heading:(e.innerText||'').trim(),line:raw});
  }
  const flat=chars.map(x=>x.ch).join('');
  for(const word of compounds){
