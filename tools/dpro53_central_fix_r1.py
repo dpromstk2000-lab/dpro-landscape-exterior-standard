@@ -392,6 +392,11 @@ def qa():
                     if name=='product-site.html' and w in (390,1440):
                         screenshot(page,QA/f'DPRO53_PRODUCT_SITE_{w}.png')
                     if name=='lp.html' and w in (390,1440):
+                        page.locator('#p9').scroll_into_view_if_needed()
+                        page.wait_for_function("document.querySelector('#p9 iframe') !== null")
+                        page.wait_for_timeout(900)
+                        page.evaluate("scrollTo(0,0)")
+                        page.wait_for_timeout(100)
                         screenshot(page,QA/f'DPRO53_LP_{w}.png')
                     page.close()
 
@@ -436,8 +441,10 @@ def qa():
             iframe_count=iframe.count()
             iframe_src=iframe.first.get_attribute('src') if iframe_count else None
             frame_urls=[f.url for f in page.frames]
-            p9_ok=(p9.count()==1 and iframe_count>=1 and any(u.endswith('/owner.html') for u in frame_urls))
-            r['runtime']['lp_p9_current_live']={'pass':p9_ok,'iframe_src':iframe_src,'frame_urls':frame_urls,'errors':errs,'request_failed':failed,'console_errors':cons}
+            owner_frames=[f for f in page.frames if f.url.endswith('/owner.html')]
+            owner_text=(owner_frames[0].locator('body').inner_text(timeout=5000).strip() if owner_frames else '')
+            p9_ok=(p9.count()==1 and iframe_count>=1 and bool(owner_frames) and len(owner_text)>20)
+            r['runtime']['lp_p9_current_live']={'pass':p9_ok,'iframe_src':iframe_src,'frame_urls':frame_urls,'owner_text_chars':len(owner_text),'errors':errs,'request_failed':failed,'console_errors':cons}
             if not p9_ok or errs or failed or cons: r['blockers'].append('LP_P9_LIVE')
             page.close()
 
