@@ -1,0 +1,162 @@
+name: DPRO 53 CENTRAL FIX R1 Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      audited_run_id:
+        description: Successful DPRO 53 CENTRAL FIX R1 workflow_dispatch run ID
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: dpro-53-central-fix-r1-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify audited source run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUDIT_RUN_ID: ${{ inputs.audited_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$AUDIT_RUN_ID" =~ ^[0-9]+$ ]]
+          gh run view "$AUDIT_RUN_ID" -R dpromstk2000-lab/dpro-landscape-exterior-standard --json conclusion,event,workflowName,headSha > /tmp/dpro53-r1-audit-run.json
+          cat /tmp/dpro53-r1-audit-run.json
+          test "$(jq -r '.conclusion' /tmp/dpro53-r1-audit-run.json)" = "success"
+          test "$(jq -r '.event' /tmp/dpro53-r1-audit-run.json)" = "workflow_dispatch"
+          test "$(jq -r '.workflowName' /tmp/dpro53-r1-audit-run.json)" = "DPRO 53 CENTRAL FIX R1"
+          echo "AUDIT_HEAD_SHA=$(jq -r '.headSha' /tmp/dpro53-r1-audit-run.json)" >> "$GITHUB_ENV"
+
+      - name: Download passed FIX R1 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dpro53-central-fix-r1-passed
+          path: _dpro53_r1_artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.audited_run_id }}
+
+      - name: Verify FIX R1 result is PASS and blocker-free
+        run: |
+          set -euo pipefail
+          test -f _dpro53_r1_artifact/reports/FINAL_QA_REPORT.json
+          test "$(jq -r '.status' _dpro53_r1_artifact/reports/FINAL_QA_REPORT.json)" = "PASS"
+          test "$(jq '.blockers | length' _dpro53_r1_artifact/reports/FINAL_QA_REPORT.json)" -eq 0
+          grep -qx 'DPRO53 CENTRAL FIX R1 PASS' _dpro53_r1_artifact/site-final/.dpro53-fix-r1-ok.txt
+
+      - name: Verify current SYSTEM Core still matches audited baseline
+        run: |
+          set -euo pipefail
+          cut -d' ' -f3- _dpro53_r1_artifact/reports/CORE_SHA_BEFORE.txt > /tmp/dpro53-r1-core-files.txt
+          : > /tmp/dpro53-r1-core-current.txt
+          while IFS= read -r f; do
+            test -f "$f"
+            sha256sum "$f" >> /tmp/dpro53-r1-core-current.txt
+          done < /tmp/dpro53-r1-core-files.txt
+          diff -u _dpro53_r1_artifact/reports/CORE_SHA_BEFORE.txt /tmp/dpro53-r1-core-current.txt
+
+      - name: Apply only approved FIX R1 presentation output
+        run: |
+          set -euo pipefail
+          cp -a _dpro53_r1_artifact/site-final/. site/
+          cat > /tmp/dpro53-r1-allowed.txt <<'EOF'
+          site/.dpro53-fix-r1-ok.txt
+          site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.0_20260904.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_V1.0_20260902.pdf
+          site/a4-flyer.html
+          site/presentation-v12/a4-flyer.html
+          site/product-site.html
+          EOF
+          sed -i 's/^          //' /tmp/dpro53-r1-allowed.txt
+          { git diff --name-only -- site; git ls-files --others --exclude-standard -- site; } | sort -u > /tmp/dpro53-r1-changed.txt
+          sort -u /tmp/dpro53-r1-allowed.txt -o /tmp/dpro53-r1-allowed.txt
+          echo 'Apply changed files:'
+          cat /tmp/dpro53-r1-changed.txt
+          if comm -23 /tmp/dpro53-r1-changed.txt /tmp/dpro53-r1-allowed.txt | grep -q .; then
+            echo 'ERROR: apply scope violation'
+            comm -23 /tmp/dpro53-r1-changed.txt /tmp/dpro53-r1-allowed.txt
+            exit 1
+          fi
+
+      - name: Recheck SYSTEM Core after apply
+        run: |
+          set -euo pipefail
+          : > /tmp/dpro53-r1-core-after-apply.txt
+          while IFS= read -r f; do
+            sha256sum "$f" >> /tmp/dpro53-r1-core-after-apply.txt
+          done < /tmp/dpro53-r1-core-files.txt
+          diff -u _dpro53_r1_artifact/reports/CORE_SHA_BEFORE.txt /tmp/dpro53-r1-core-after-apply.txt
+
+      - name: Commit audited FIX R1 presentation files
+        id: commit
+        run: |
+          set -euo pipefail
+          git config user.name 'dpro-factory-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- site
+          if git diff --cached --quiet; then
+            echo 'No presentation changes to commit.'
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m 'DPRO 53 CENTRAL FIX R1 presentation sync'
+            git push origin HEAD:main
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch and wait for GitHub Pages
+        id: pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FINAL_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          echo "Final bot commit: $FINAL_SHA"
+          gh workflow run deploy-pages.yml -R dpromstk2000-lab/dpro-landscape-exterior-standard --ref main
+          pages_id=''
+          for i in $(seq 1 40); do
+            pages_id="$(gh run list -R dpromstk2000-lab/dpro-landscape-exterior-standard --workflow deploy-pages.yml --branch main --limit 30 --json databaseId,headSha,event | jq -r --arg sha "$FINAL_SHA" '[.[] | select(.headSha==$sha and .event=="workflow_dispatch")][0].databaseId // empty')"
+            if [ -n "$pages_id" ]; then break; fi
+            sleep 3
+          done
+          test -n "$pages_id"
+          echo "Pages run: $pages_id"
+          gh run watch "$pages_id" -R dpromstk2000-lab/dpro-landscape-exterior-standard --exit-status
+          conclusion="$(gh run view "$pages_id" -R dpromstk2000-lab/dpro-landscape-exterior-standard --json conclusion -q .conclusion)"
+          test "$conclusion" = "success"
+          echo "pages_run_id=$pages_id" >> "$GITHUB_OUTPUT"
+
+      - name: Build final FIX R1 chain evidence
+        env:
+          AUDIT_RUN_ID: ${{ inputs.audited_run_id }}
+          FINAL_SHA: ${{ steps.commit.outputs.sha }}
+          PAGES_RUN_ID: ${{ steps.pages.outputs.pages_run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p dpro53-r1-final-evidence
+          cp _dpro53_r1_artifact/reports/FINAL_QA_REPORT.json dpro53-r1-final-evidence/
+          cp _dpro53_r1_artifact/reports/FINAL_QA_REPORT.md dpro53-r1-final-evidence/
+          cp _dpro53_r1_artifact/reports/CORE_SHA_BEFORE.txt dpro53-r1-final-evidence/
+          cp _dpro53_r1_artifact/reports/CORE_SHA_AFTER.txt dpro53-r1-final-evidence/
+          cp _dpro53_r1_artifact/reports/CORE_SHA_PROTECTION.txt dpro53-r1-final-evidence/
+          printf 'PRODUCT=DPRO 造園・外構\nPRODUCT_NUMBER=53\nFIX=CENTRAL_REAUDIT_FIX_R1\nAUDIT_RUN_ID=%s\nAUDIT_HEAD_SHA=%s\nFINAL_BOT_COMMIT=%s\nPAGES_RUN_ID=%s\nBLOCKERS=0\nSTATUS=FINAL_CHAIN_PASS\n' "$AUDIT_RUN_ID" "$AUDIT_HEAD_SHA" "$FINAL_SHA" "$PAGES_RUN_ID" > dpro53-r1-final-evidence/FINAL_CHAIN_EVIDENCE.txt
+
+      - name: Upload final FIX R1 chain evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dpro53-central-fix-r1-final-chain-evidence
+          path: dpro53-r1-final-evidence
+          if-no-files-found: error
+          retention-days: 14
