@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - 'tools/dpro53_reaudit.py'
-      - '.github/workflows/dpro-53-final-reaudit.yml'
-      - '.github/workflows/dpro-53-final-reaudit-apply.yml'
+      - 'tools/dpro53_central_fix_r1.py'
+      - '.github/workflows/dpro-53-central-fix-r1.yml'
+      - '.github/workflows/dpro-53-central-fix-r1-apply.yml'
       - '.github/workflows/dpro-53-bootstrap-dispatch.yml'
 
 permissions:
@@ -20,9 +20,9 @@ concurrency:
 jobs:
   dispatch:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 90
     steps:
-      - name: Dispatch and wait for required final re-audit
+      - name: Dispatch and wait for CENTRAL FIX R1 audit
         id: audit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -30,10 +30,10 @@ jobs:
         run: |
           set -euo pipefail
           repo='dpromstk2000-lab/dpro-landscape-exterior-standard'
-          gh workflow run dpro-53-final-reaudit.yml -R "$repo" --ref main
+          gh workflow run dpro-53-central-fix-r1.yml -R "$repo" --ref main
           audit_id=''
           for i in $(seq 1 40); do
-            audit_id="$(gh run list -R "$repo" --workflow dpro-53-final-reaudit.yml --branch main --limit 30 --json databaseId,headSha,event | jq -r --arg sha "$EXPECTED_SHA" '[.[] | select(.headSha==$sha and .event=="workflow_dispatch")][0].databaseId // empty')"
+            audit_id="$(gh run list -R "$repo" --workflow dpro-53-central-fix-r1.yml --branch main --limit 30 --json databaseId,headSha,event | jq -r --arg sha "$EXPECTED_SHA" '[.[] | select(.headSha==$sha and .event=="workflow_dispatch")][0].databaseId // empty')"
             if [ -n "$audit_id" ]; then break; fi
             sleep 3
           done
@@ -44,7 +44,7 @@ jobs:
           test "$conclusion" = 'success'
           echo "audit_run_id=$audit_id" >> "$GITHUB_OUTPUT"
 
-      - name: Dispatch and wait for audited apply chain
+      - name: Dispatch and wait for audited CENTRAL FIX R1 apply chain
         id: apply
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,10 +53,10 @@ jobs:
         run: |
           set -euo pipefail
           repo='dpromstk2000-lab/dpro-landscape-exterior-standard'
-          gh workflow run dpro-53-final-reaudit-apply.yml -R "$repo" --ref main -f audited_run_id="$AUDIT_RUN_ID"
+          gh workflow run dpro-53-central-fix-r1-apply.yml -R "$repo" --ref main -f audited_run_id="$AUDIT_RUN_ID"
           apply_id=''
           for i in $(seq 1 40); do
-            apply_id="$(gh run list -R "$repo" --workflow dpro-53-final-reaudit-apply.yml --branch main --limit 30 --json databaseId,headSha,event | jq -r --arg sha "$EXPECTED_SHA" '[.[] | select(.headSha==$sha and .event=="workflow_dispatch")][0].databaseId // empty')"
+            apply_id="$(gh run list -R "$repo" --workflow dpro-53-central-fix-r1-apply.yml --branch main --limit 30 --json databaseId,headSha,event | jq -r --arg sha "$EXPECTED_SHA" '[.[] | select(.headSha==$sha and .event=="workflow_dispatch")][0].databaseId // empty')"
             if [ -n "$apply_id" ]; then break; fi
             sleep 3
           done
@@ -70,6 +70,6 @@ jobs:
       - name: Final chain summary
         run: |
           set -euo pipefail
-          echo "DPRO 53 final chain PASS"
-          echo "Audit run: ${{ steps.audit.outputs.audit_run_id }}"
-          echo "Apply run: ${{ steps.apply.outputs.apply_run_id }}"
+          echo 'DPRO 53 CENTRAL FIX R1 chain completed successfully.'
+          echo 'Audit run: ${{ steps.audit.outputs.audit_run_id }}'
+          echo 'Apply run: ${{ steps.apply.outputs.apply_run_id }}'
