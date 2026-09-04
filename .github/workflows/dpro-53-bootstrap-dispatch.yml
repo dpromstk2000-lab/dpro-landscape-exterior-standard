@@ -1,0 +1,30 @@
+name: DPRO 53 Bootstrap Dispatch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/dpro53_reaudit.py'
+      - '.github/workflows/dpro-53-final-reaudit.yml'
+      - '.github/workflows/dpro-53-final-reaudit-apply.yml'
+      - '.github/workflows/dpro-53-bootstrap-dispatch.yml'
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: dpro-53-bootstrap-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch required workflow_dispatch run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh workflow run dpro-53-final-reaudit.yml --ref main
+          echo 'DPRO 53 workflow_dispatch requested.'
