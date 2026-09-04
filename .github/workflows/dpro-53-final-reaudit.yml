@@ -1,0 +1,136 @@
+name: DPRO 53 Final Reaudit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: dpro-53-final-reaudit
+  cancel-in-progress: false
+
+jobs:
+  reaudit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install QA dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml beautifulsoup4 pypdf pymupdf pillow qrcode playwright opencv-python-headless
+          python -m playwright install --with-deps chromium
+
+      - name: Record SYSTEM Core SHA before
+        run: |
+          set -euo pipefail
+          {
+            printf '%s\n' SYSTEM_MASTER.yml schema.sql SHARED_SUPABASE_BINDING.yml AUTH_ROLE_MATRIX.yml STORAGE_INTEGRATION_CONTRACT.yml LINE_INTEGRATION_CONTRACT.yml site/app-core.js site/auth-client.js site/config.js
+            find worker supabase -type f -print
+          } | sort -u > /tmp/dpro53-core-paths.txt
+          : > CORE_SHA_BEFORE.txt
+          while IFS= read -r f; do
+            test -f "$f"
+            sha256sum "$f" >> CORE_SHA_BEFORE.txt
+          done < /tmp/dpro53-core-paths.txt
+
+      - name: Workflow and tool preflight
+        run: |
+          set -euo pipefail
+          python tools/dpro53_reaudit.py validate-workflows
+
+      - name: Prepare certified presentation files
+        run: |
+          set -euo pipefail
+          python tools/dpro53_reaudit.py prepare
+
+      - name: Run FACTORY runtime QA
+        run: |
+          set -euo pipefail
+          python tools/dpro53_reaudit.py qa
+
+      - name: Verify changed-file scope
+        run: |
+          set -euo pipefail
+          cat > /tmp/dpro53-allowed-site.txt <<'EOF'
+          site/.dpro53-reaudit-ok.txt
+          site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.0_20260904.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_V1.0_20260902.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.1_20260904.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_V1.0_20260902.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.1_20260904.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_V1.0_20260902.pdf
+          site/a4-flyer.html
+          site/detailed-manual.html
+          site/guide-center.html
+          site/landscape-consult.jpg
+          site/landscape-hero.jpg
+          site/lp.html
+          site/product-site-v2.css
+          site/qa-customer-screen.png
+          site/qa-owner-screen.png
+          site/qa-staff-screen.png
+          site/qa-system-check-screen.png
+          site/qr-demo.svg
+          site/qr-guide.svg
+          site/qr-line.svg
+          site/qr-shop.svg
+          site/qr-system-check.svg
+          site/qr-tutorial.svg
+          site/quick-start.html
+          EOF
+          sed -i 's/^          //' /tmp/dpro53-allowed-site.txt
+          { git diff --name-only -- site; git ls-files --others --exclude-standard -- site; } | sort -u > /tmp/dpro53-changed-site.txt
+          sort -u /tmp/dpro53-allowed-site.txt -o /tmp/dpro53-allowed-site.txt
+          echo 'Changed site files:'
+          cat /tmp/dpro53-changed-site.txt
+          if comm -23 /tmp/dpro53-changed-site.txt /tmp/dpro53-allowed-site.txt | grep -q .; then
+            echo 'ERROR: Out-of-scope site changes detected'
+            comm -23 /tmp/dpro53-changed-site.txt /tmp/dpro53-allowed-site.txt
+            exit 1
+          fi
+
+      - name: Verify SYSTEM Core SHA after
+        run: |
+          set -euo pipefail
+          : > CORE_SHA_AFTER.txt
+          while IFS= read -r f; do
+            sha256sum "$f" >> CORE_SHA_AFTER.txt
+          done < /tmp/dpro53-core-paths.txt
+          if diff -u CORE_SHA_BEFORE.txt CORE_SHA_AFTER.txt > CORE_SHA_PROTECTION.txt; then
+            printf '\nCORE_SHA_PROTECTION=PASS\n' >> CORE_SHA_PROTECTION.txt
+          else
+            cat CORE_SHA_PROTECTION.txt
+            echo 'SYSTEM CORE SHA changed; aborting'
+            exit 1
+          fi
+
+      - name: Build passed artifact
+        run: |
+          set -euo pipefail
+          python tools/dpro53_reaudit.py artifact
+          cp CORE_SHA_BEFORE.txt artifact-dpro53/reports/
+          cp CORE_SHA_AFTER.txt artifact-dpro53/reports/
+          cp CORE_SHA_PROTECTION.txt artifact-dpro53/reports/
+          printf 'WORKFLOW_EVENT=workflow_dispatch\nWORKFLOW_RUN_ID=%s\nHEAD_SHA=%s\n' '${{ github.run_id }}' '${{ github.sha }}' > artifact-dpro53/reports/WORKFLOW_DISPATCH_EVIDENCE.txt
+
+      - name: Upload passed artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dpro53-reaudit-passed
+          path: artifact-dpro53
+          if-no-files-found: error
+          retention-days: 7
