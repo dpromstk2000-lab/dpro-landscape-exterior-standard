@@ -1,9 +1,12 @@
 name: DPRO 53 Apply Reaudit
 
 on:
-  workflow_run:
-    workflows: ["DPRO 53 Final Reaudit"]
-    types: [completed]
+  workflow_dispatch:
+    inputs:
+      audited_run_id:
+        description: Successful DPRO 53 Final Reaudit workflow_dispatch run ID
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -15,9 +18,8 @@ concurrency:
 
 jobs:
   apply:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout latest main
         uses: actions/checkout@v6
@@ -25,13 +27,35 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Verify audited source run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUDIT_RUN_ID: ${{ inputs.audited_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$AUDIT_RUN_ID" =~ ^[0-9]+$ ]]
+          gh run view "$AUDIT_RUN_ID" -R dpromstk2000-lab/dpro-landscape-exterior-standard --json conclusion,event,workflowName,headSha > /tmp/dpro53-audit-run.json
+          cat /tmp/dpro53-audit-run.json
+          test "$(jq -r '.conclusion' /tmp/dpro53-audit-run.json)" = "success"
+          test "$(jq -r '.event' /tmp/dpro53-audit-run.json)" = "workflow_dispatch"
+          test "$(jq -r '.workflowName' /tmp/dpro53-audit-run.json)" = "DPRO 53 Final Reaudit"
+          echo "AUDIT_HEAD_SHA=$(jq -r '.headSha' /tmp/dpro53-audit-run.json)" >> "$GITHUB_ENV"
+
       - name: Download passed re-audit artifact
         uses: actions/download-artifact@v4
         with:
           name: dpro53-reaudit-passed
           path: _dpro53_artifact
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ inputs.audited_run_id }}
+
+      - name: Verify audit result is PASS and blocker-free
+        run: |
+          set -euo pipefail
+          test -f _dpro53_artifact/reports/DPRO53_REAUDIT_RUNTIME_RESULT.json
+          test "$(jq -r '.status' _dpro53_artifact/reports/DPRO53_REAUDIT_RUNTIME_RESULT.json)" = "PASS"
+          test "$(jq '.blockers | length' _dpro53_artifact/reports/DPRO53_REAUDIT_RUNTIME_RESULT.json)" -eq 0
+          grep -qx 'DPRO53 REAUDIT PASS' _dpro53_artifact/site-final/.dpro53-reaudit-ok.txt
 
       - name: Verify current SYSTEM Core still matches audited baseline
         run: |
@@ -111,11 +135,47 @@ jobs:
             echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Dispatch GitHub Pages after bot commit
+      - name: Dispatch and wait for GitHub Pages
+        id: pages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FINAL_SHA: ${{ steps.commit.outputs.sha }}
         run: |
           set -euo pipefail
-          echo "Final bot commit: ${{ steps.commit.outputs.sha }}"
-          gh workflow run deploy-pages.yml --ref main
-          echo 'Pages workflow dispatched after bot commit.'
+          echo "Final bot commit: $FINAL_SHA"
+          gh workflow run deploy-pages.yml -R dpromstk2000-lab/dpro-landscape-exterior-standard --ref main
+          pages_id=''
+          for i in $(seq 1 40); do
+            pages_id="$(gh run list -R dpromstk2000-lab/dpro-landscape-exterior-standard --workflow deploy-pages.yml --branch main --limit 30 --json databaseId,headSha,event | jq -r --arg sha "$FINAL_SHA" '[.[] | select(.headSha==$sha and .event=="workflow_dispatch")][0].databaseId // empty')"
+            if [ -n "$pages_id" ]; then break; fi
+            sleep 3
+          done
+          test -n "$pages_id"
+          echo "Pages run: $pages_id"
+          gh run watch "$pages_id" -R dpromstk2000-lab/dpro-landscape-exterior-standard --exit-status
+          conclusion="$(gh run view "$pages_id" -R dpromstk2000-lab/dpro-landscape-exterior-standard --json conclusion -q .conclusion)"
+          test "$conclusion" = "success"
+          echo "pages_run_id=$pages_id" >> "$GITHUB_OUTPUT"
+
+      - name: Build final chain evidence
+        env:
+          AUDIT_RUN_ID: ${{ inputs.audited_run_id }}
+          FINAL_SHA: ${{ steps.commit.outputs.sha }}
+          PAGES_RUN_ID: ${{ steps.pages.outputs.pages_run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p dpro53-final-evidence
+          cp _dpro53_artifact/reports/DPRO53_REAUDIT_RUNTIME_RESULT.json dpro53-final-evidence/
+          cp _dpro53_artifact/reports/DPRO53_REAUDIT_RUNTIME_RESULT.md dpro53-final-evidence/
+          cp _dpro53_artifact/reports/CORE_SHA_BEFORE.txt dpro53-final-evidence/
+          cp _dpro53_artifact/reports/CORE_SHA_AFTER.txt dpro53-final-evidence/
+          cp _dpro53_artifact/reports/CORE_SHA_PROTECTION.txt dpro53-final-evidence/
+          printf 'AUDIT_RUN_ID=%s\nAUDIT_HEAD_SHA=%s\nFINAL_BOT_COMMIT=%s\nPAGES_RUN_ID=%s\nBLOCKERS=0\nSTATUS=FINAL_CHAIN_PASS\n' "$AUDIT_RUN_ID" "$AUDIT_HEAD_SHA" "$FINAL_SHA" "$PAGES_RUN_ID" > dpro53-final-evidence/FINAL_CHAIN_EVIDENCE.txt
+
+      - name: Upload final chain evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dpro53-final-chain-evidence
+          path: dpro53-final-evidence
+          if-no-files-found: error
+          retention-days: 14
