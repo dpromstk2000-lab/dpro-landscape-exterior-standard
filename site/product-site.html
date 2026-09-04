@@ -1,9 +1,298 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DPRO 造園・外構｜製品サイト</title><meta name="description" content="写真相談から現調・見積・施工・Before→After完了承認・季節アフターまでを一つの現場カルテでつなぐ、造園・外構向けDPROシステム。"><link rel="stylesheet" href="site.css"></head><body>
-<header class="site-head"><div class="inner"><a class="logo" href="product-site.html">DPRO 造園・外構<small>LANDSCAPE / EXTERIOR SYSTEM</small></a><nav class="site-nav"><a href="#feature">特徴</a><a href="#workflow">流れ</a><a href="#roles">画面</a><a href="tutorial.html">Tutorial</a><a href="lp.html">導入相談</a></nav></div></header>
-<main><div class="container"><section class="hero"><div><div class="eyebrow">PHOTO SITE RECORD</div><h1>写真で始まり、<br>写真で伝わる。<br>造園・外構の現場カルテ。</h1><p>顧客から届いた相談写真を、そのまま現調・見積根拠・施工前後・完了承認へ。案件の「どの場所を、どう変えたか」が、Owner・Staff・Customerでつながります。</p><div class="actions"><a class="btn" href="index.html">Coreデモを見る</a><a class="btn alt" href="#feature">機能を見る</a></div><p class="fine">※標準製品はCore・共有Supabase専用schema・Private Storage・GitHub Pages・WorkerまでREADY済みです。契約者固有のAuth / LINE / Turnstileは契約後のREADY導入工程でBindingします。</p></div><div class="ui-preview" aria-label="Owner Console UIプレビュー"><div class="ui-window"><div class="ui-bar"><span class="ui-dot"></span><span class="ui-dot"></span><span class="ui-dot"></span></div><div class="ui-body"><div class="ui-kpis"><div class="ui-kpi"><span>案件</span><strong>12</strong></div><div class="ui-kpi"><span>施工中</span><strong>4</strong></div><div class="ui-kpi"><span>完了確認</span><strong>2</strong></div></div><div class="ui-split"><div class="ui-list"><div class="ui-row"><b>庭木剪定</b><br>次：現調写真確認</div><div class="ui-row"><b>玄関アプローチ</b><br>次：After写真</div><div class="ui-row"><b>フェンス補修</b><br>次：完了承認</div></div><div class="ui-list"><div class="ui-photo">BEFORE → AFTER</div><div class="ui-row"><b>PHOTO SITE RECORD</b><br>施工箇所ごとに履歴を接続</div></div></div></div></div></div></section></div>
-<div class="strip"><div class="container inner"><div class="metric"><strong>写真相談</strong><span>LINE / WEB入口</span></div><div class="metric"><strong>現調・見積</strong><span>根拠を案件へ接続</span></div><div class="metric"><strong>Before → After</strong><span>施工箇所単位で比較</span></div><div class="metric"><strong>季節アフター</strong><span>次回候補をOwnerへ</span></div></div></div>
-<section id="feature"><div class="container"><div class="section-head"><div class="eyebrow">KILLER FEATURE</div><h2>写真フォルダではなく、<br>「場所の履歴」にする。</h2><p>一般的な写真管理ではなく、同じ施工箇所に相談・現調・Before・Progress・After・完了承認を積み上げるPHOTO SITE RECORDを中核にしています。</p></div><div class="g3 grid"><article class="card"><div class="num">01</div><h3>相談写真を案件へ直結</h3><p>顧客が送った要望と写真を、現調前から案件・施工箇所の文脈で扱います。</p></article><article class="card"><div class="num">02</div><h3>撮影ポイントでBefore→After</h3><p>必須撮影ポイントを設定し、施工後写真不足のまま完了提出しないGuardをCoreに実装しています。</p></article><article class="card"><div class="num">03</div><h3>顧客が完了を確認</h3><p>共有された写真と施工状況をCustomer画面で確認し、完了承認または手直し依頼へ進めます。</p></article></div></div></section>
-<section id="workflow"><div class="container"><div class="section-head"><div class="eyebrow">WORKFLOW</div><h2>問い合わせから「次の季節」まで。</h2></div><div class="flow"><div><strong>写真相談</strong><span>要望・連絡先・写真</span></div><div><strong>現地調査</strong><span>写真・寸法・注意点</span></div><div><strong>見積・契約</strong><span>版管理・説明履歴</span></div><div><strong>施工</strong><span>担当・工程・進捗</span></div><div><strong>完了承認</strong><span>Before→After確認</span></div><div><strong>アフター</strong><span>次回候補・再依頼</span></div></div></div></section>
-<section><div class="container"><div class="beforeafter"><div class="ba-panel"><div class="eyebrow">BEFORE</div><h2>LINE、紙、写真フォルダ、Excelを探す。</h2><ul class="checklist"><li>現調前に写真を探し直す</li><li>写真を見積へ説明し直す</li><li>工程変更を個別連絡する</li><li>完了写真の撮り忘れに気づく</li><li>アフター時期が担当者の記憶頼み</li></ul></div><div class="arrow">→</div><div class="ba-panel after"><div class="eyebrow" style="color:#b9d4bd">AFTER</div><h2>案件を開けば、次に何をするか分かる。</h2><ul class="checklist"><li>相談から施工箇所がつながる</li><li>Owner / Staff / Customerの範囲を分離</li><li>現場写真を撮影ポイントで整理</li><li>完了提出時に不足写真をチェック</li><li>完了案件から次回フォロー候補へ</li></ul></div></div></div></section>
-<section id="roles" class="screenband"><div class="container"><div class="section-head"><div class="eyebrow" style="color:#b9d4bd">ROLE DESIGN</div><h2>同じ案件を、役割ごとに必要な形で。</h2><p>Ownerは全体、Staffは担当現場、Customerは自分の案件のみ。Coreでサーバー側のRole / Scopeを分離しています。</p></div><div class="role-previews"><article class="role-preview"><h3>Owner</h3><div class="ui-kpis"><div class="ui-kpi"><span>案件</span><strong>12</strong></div><div class="ui-kpi"><span>施工中</span><strong>4</strong></div><div class="ui-kpi"><span>確認待ち</span><strong>2</strong></div></div><p class="mini">全体・次アクション・見積・完了・アフター候補</p></article><article class="role-preview"><h3>Staff</h3><div class="ui-photo">撮影ポイント / After</div><p class="mini">担当現場だけ。確認 → 撮影 → 進捗 → 完了提出。</p></article><article class="role-preview"><h3>Customer</h3><div class="ui-photo">Before → After</div><p class="mini">自分の案件だけ。見積・予定・写真・完了承認。</p></article></div></div></section>
-<section><div class="container"><div class="section-head"><div class="eyebrow">DESIGN POLICY</div><h2>現場に仕事を増やさない。</h2></div><div class="g3 grid"><article class="card"><h3>スマホ先行</h3><p>Staffは「確認→撮影→進捗→完了報告」を短い導線で行う設計です。</p></article><article class="card"><h3>安全側のGuard</h3><p>Demo tokenのProduction利用拒否、Production更新の既定ロック、Role境界をCoreで検証します。</p></article><article class="card"><h3>重いCADは非目標</h3><p>専門CADの代替ではなく、顧客接点・案件・写真・施工・アフターの運用統合へ集中します。</p></article></div><div class="cta"><h2>「写真が散らばる」を、現場カルテへ。</h2><p>本番導入では、事業者情報・Staff・LINE・Supabase・画像Storage・権限をREADY手順で設定します。</p><a class="btn" style="background:#fff;color:#214d35;border-color:#fff" href="guide-center.html">導入Guideを見る</a></div></div></section></main><footer class="footer"><div class="container">DPRO 造園・外構 — STANDARD PRODUCT V1.0 / Claims are bound to SYSTEM MASTER.</div></footer></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0f4d35">
+  <title>DPRO 造園・外構｜業種特化型LINE・現場管理システム</title>
+  <meta name="description" content="写真相談・現地調査・見積・施工・Before/After・完了承認・季節アフターまでを、一つの現場カルテでつなぐ造園・外構向けDPROシステム。">
+  <link rel="stylesheet" href="product-site-v2.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="shell topbar__inner">
+    <a class="brand" href="product-site.html" aria-label="DPRO 造園・外構 製品サイト">
+      <span class="brand__mark">D</span>
+      <span>
+        <b>DPRO LINE SYSTEMS</b>
+        <small>LANDSCAPE / EXTERIOR PRODUCT SITE</small>
+      </span>
+    </a>
+    <nav class="topnav" aria-label="主要ナビゲーション">
+      <a href="#features">機能</a>
+      <a href="#price">料金</a>
+      <a href="guide-center.html">Guide</a>
+      <a class="topnav__cta" href="index.html">LIVE DEMO</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero section--mint">
+  <div class="shell hero__grid">
+    <div class="hero__copy">
+      <p class="kicker">DPRO / LANDSCAPE &amp; EXTERIOR</p>
+      <span class="status-pill">● LIVE DEMO READY</span>
+      <h1>写真相談から、<br>現調・見積・施工・<br>完了承認まで。<br><em>ひとつの現場カルテへ。</em></h1>
+      <p class="hero__lead">造園・外構の仕事は、写真・見積・予定・担当者・施工前後の記録が分かれるほど、確認の手間が増えます。DPROは、案件ごとの「場所の履歴」として一つにつなぎます。</p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="index.html">LIVE DEMOを試す ↗</a>
+        <a class="btn btn--ghost" href="lp.html">詳しい説明を見る ↗</a>
+      </div>
+      <div class="hero__tags" aria-label="主な機能">
+        <span>写真相談</span><span>現地調査</span><span>見積</span><span>施工管理</span><span>Before / After</span><span>季節フォロー</span>
+      </div>
+    </div>
+
+    <div class="hero__visual">
+      <div class="device">
+        <div class="device__top"><span></span><span></span><span></span><b>OWNER CONSOLE</b></div>
+        <img src="owner-screen.jpg" alt="DPRO 造園・外構 Owner Consoleの実画面">
+      </div>
+      <div class="float-card float-card--a"><small>NEXT ACTION</small><b>施工後写真を登録</b><span>完了確認へ</span></div>
+      <div class="float-card float-card--b"><small>PHOTO SITE RECORD</small><b>Before → After</b><span>場所ごとに履歴化</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <p class="kicker">UNDERSTAND IN 30 SECONDS</p>
+      <h2>30秒で分かる、このシステムの価値。</h2>
+      <p>「写真がどこにあるか」「次に何をするか」を探す時間を減らし、現場とお客様の確認を同じ流れにします。</p>
+    </div>
+    <div class="value-grid">
+      <article class="value-card"><span>01</span><h3>写真から案件が始まる</h3><p>相談写真をそのまま現調・見積・施工箇所の記録へつなぎます。</p></article>
+      <article class="value-card"><span>02</span><h3>次の行動が分かる</h3><p>案件を開けば、見積・施工・撮影・完了確認など次の工程が見えます。</p></article>
+      <article class="value-card"><span>03</span><h3>施工前後を説明できる</h3><p>Before / Progress / Afterを同じ場所で比較し、完了承認まで残せます。</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section section--soft">
+  <div class="shell">
+    <div class="section-head compact">
+      <p class="kicker">RECOMMENDED FOR</p>
+      <h2>こんな方におすすめ。</h2>
+      <p>写真・見積・現場連絡が増え、案件ごとの情報が散らばり始めた事業者向けです。</p>
+    </div>
+    <div class="recommend-grid">
+      <div>✓ 写真相談をLINE / WEBから受けたい</div>
+      <div>✓ 見積後の案件進行を整理したい</div>
+      <div>✓ 施工前後の写真を案件ごとに残したい</div>
+      <div>✓ 季節ごとの再提案・再依頼につなげたい</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head compact">
+      <p class="kicker">BEFORE → AFTER</p>
+      <h2>よくある課題を、一つの運用へ。</h2>
+    </div>
+    <div class="change-grid">
+      <article class="change-card"><div class="before"><small>BEFORE</small><b>写真がLINE・端末・フォルダに分散</b></div><div class="after"><small>AFTER</small><b>案件・施工箇所ごとの現場カルテに集約</b></div></article>
+      <article class="change-card"><div class="before"><small>BEFORE</small><b>見積後の進捗が担当者しか分からない</b></div><div class="after"><small>AFTER</small><b>次アクションとステータスを共有</b></div></article>
+      <article class="change-card"><div class="before"><small>BEFORE</small><b>完了報告と次回提案が別々</b></div><div class="after"><small>AFTER</small><b>完了承認から季節フォロー候補へ接続</b></div></article>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="section section--mint">
+  <div class="shell">
+    <div class="section-head">
+      <p class="kicker">6 FUNCTIONS</p>
+      <h2>造園・外構の業務を、6つの仕組みで整える。</h2>
+      <p>業務を別々のツールに切り分けるのではなく、案件を中心に必要な情報をつなぎます。</p>
+    </div>
+    <div class="feature-grid">
+      <article class="feature-card"><span>01</span><h3>写真相談・受付</h3><p>お客様の要望・連絡先・相談写真を案件の入口として受け付けます。</p><b>相談から写真を探し直さない。</b></article>
+      <article class="feature-card"><span>02</span><h3>現地調査</h3><p>現調写真・寸法・注意点・施工箇所を案件内に整理します。</p><b>見積の根拠を残せる。</b></article>
+      <article class="feature-card"><span>03</span><h3>見積・案件管理</h3><p>見積内容と案件ステータスをつなぎ、次の工程を明確にします。</p><b>「今どこ？」を減らす。</b></article>
+      <article class="feature-card"><span>04</span><h3>施工・スタッフ管理</h3><p>担当者・工程・進捗を共有し、現場側の操作は短い導線にします。</p><b>現場に仕事を増やさない。</b></article>
+      <article class="feature-card"><span>05</span><h3>Before / After・完了承認</h3><p>撮影ポイントごとの施工前後を比較し、お客様の完了確認へつなぎます。</p><b>施工品質を写真で伝える。</b></article>
+      <article class="feature-card"><span>06</span><h3>季節フォロー・再依頼</h3><p>完了案件を次回の剪定・点検・提案候補へ戻します。</p><b>単発で終わらせない。</b></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head compact">
+      <p class="kicker">OPERATING FLOW</p>
+      <h2>日々の業務を、一つの流れに。</h2>
+    </div>
+    <div class="flow-grid">
+      <div><span>STEP 01</span><b>相談受付</b><small>写真・要望・連絡先</small></div>
+      <div><span>STEP 02</span><b>現地調査</b><small>写真・寸法・注意点</small></div>
+      <div><span>STEP 03</span><b>見積・提案</b><small>根拠・金額・説明</small></div>
+      <div><span>STEP 04</span><b>施工・進行</b><small>担当・工程・進捗</small></div>
+      <div><span>STEP 05</span><b>完了承認</b><small>Before / After確認</small></div>
+      <div><span>STEP 06</span><b>季節フォロー</b><small>次回候補・再依頼</small></div>
+    </div>
+  </div>
+</section>
+
+<section id="demo" class="section live">
+  <div class="shell live__grid">
+    <div>
+      <p class="kicker kicker--light">LIVE PRODUCT EXPERIENCE</p>
+      <h2>説明だけではなく、<br>LIVE DEMOを体験。</h2>
+      <p>Owner画面・Staff画面・Customer画面を、実際の操作導線で確認できます。</p>
+      <ul class="live__list">
+        <li>案件一覧と「今日やること」</li>
+        <li>現場カルテ・写真ポイント</li>
+        <li>施工中 → 完了確認の流れ</li>
+        <li>Owner / Staff / Customerの役割分離</li>
+      </ul>
+      <a class="btn btn--light" href="index.html">LIVE DEMOを開く ↗</a>
+    </div>
+    <div class="live__screen">
+      <div class="screen-frame">
+        <img src="owner-screen.jpg" alt="DPRO 造園・外構のOwner実画面">
+      </div>
+      <div class="screen-caption"><b>OWNER CONSOLE</b><span>案件 → 現場カルテ → 次アクションを一画面で。</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <p class="kicker">CONNECTED EXPERIENCE</p>
+      <h2>機能を分断せず、一つの業務情報へ。</h2>
+      <p>入口が写真相談でも、現場更新でも、同じ案件情報へつながることがDPROの中心です。</p>
+    </div>
+    <div class="connect">
+      <div class="connect__sources">
+        <span>写真相談</span><span>現地調査</span><span>見積</span><span>施工進捗</span>
+      </div>
+      <div class="connect__arrow">→</div>
+      <div class="connect__core"><small>DPRO</small><b>SYSTEM</b><span>現場カルテ</span></div>
+      <div class="connect__arrow">→</div>
+      <div class="connect__roles">
+        <div><small>OWNER</small><b>全体管理</b></div>
+        <div><small>STAFF</small><b>担当現場</b></div>
+        <div><small>CUSTOMER</small><b>自分の案件</b></div>
+      </div>
+    </div>
+    <p class="connect-note">システムは、現場のやり方を増やすのではなく、散らばった確認先を減らすために使います。</p>
+  </div>
+</section>
+
+<section class="section section--soft">
+  <div class="shell">
+    <div class="section-head compact">
+      <p class="kicker">FIELD &amp; CONSULTATION</p>
+      <h2>現場とお客様対応、その両方に。</h2>
+    </div>
+    <div class="photo-grid">
+      <figure><img src="landscape-hero.jpg" alt="現場でタブレットを確認する担当者"><figcaption><b>現場</b><span>担当者は必要な案件情報だけを確認し、写真・進捗を更新。</span></figcaption></figure>
+      <figure><img src="landscape-consult.jpg" alt="お客様との打ち合わせ"><figcaption><b>相談・提案</b><span>写真と見積根拠を同じ案件で確認し、説明の行き違いを減らします。</span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="price" class="section section--mint">
+  <div class="shell">
+    <div class="section-head compact">
+      <p class="kicker">PRICE</p>
+      <h2>月額合計 5,500円（税込）</h2>
+      <p>LINE公式・ホームページ・DPROシステムを、一つの運用として整える標準構成です。</p>
+    </div>
+    <div class="price-card">
+      <div class="price-main">
+        <small>DPRO SHOP MONTHLY OPERATION</small>
+        <strong>5,500<em>円 / 月（税込）</em></strong>
+        <p>相談入口から現場カルテ、完了承認、次回フォローまでを支える運用基盤。</p>
+      </div>
+      <div class="price-breakdown">
+        <div><span>LINE公式運用</span><b>3,300円</b></div>
+        <div><span>ホームページ運用</span><b>1,100円</b></div>
+        <div><span>DPROシステム運用</span><b>1,100円</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head compact">
+      <p class="kicker">INTRODUCTION FLOW</p>
+      <h2>導入前に、今の運用と実画面を確認。</h2>
+      <p>契約者固有の環境を作る前に、標準製品で業務の流れと操作感を確認します。</p>
+    </div>
+    <div class="intro-grid">
+      <article><span>STEP 01</span><h3>LIVE DEMO</h3><p>Owner / Staff / Customerの画面と流れを確認。</p><a href="index.html">デモを開く ↗</a></article>
+      <article><span>STEP 02</span><h3>資料で確認</h3><p>Guide・Tutorial・詳細LPで導入範囲を確認。</p><a href="guide-center.html">Guideを見る ↗</a></article>
+      <article><span>STEP 03</span><h3>導入相談</h3><p>現在の受付・見積・施工・写真管理に合わせて確認。</p><a href="lp.html">詳しいLPを見る ↗</a></article>
+    </div>
+  </div>
+</section>
+
+<section class="section section--soft">
+  <div class="shell">
+    <div class="section-head compact">
+      <p class="kicker">FAQ</p>
+      <h2>よくある確認事項。</h2>
+    </div>
+    <div class="faq">
+      <details><summary>どんな相談から始められますか？</summary><p>剪定・植栽・外構補修など、要望と写真を案件の入口として扱えます。</p></details>
+      <details><summary>見積と写真は一緒に管理できますか？</summary><p>現調写真・施工箇所・見積根拠を同じ案件の流れで確認できる設計です。</p></details>
+      <details><summary>施工前後の写真を残せますか？</summary><p>Before / Progress / Afterを撮影ポイント単位で整理し、完了確認につなげます。</p></details>
+      <details><summary>スタッフごとに見える範囲を分けられますか？</summary><p>Owner・Staff・Customerで役割と参照範囲を分ける前提で構成しています。</p></details>
+      <details><summary>季節フォローにも使えますか？</summary><p>完了案件から次回の剪定・点検・提案候補へ戻す流れを用意しています。</p></details>
+      <details><summary>契約前に試せますか？</summary><p>LIVE DEMOで標準製品の操作感を確認できます。契約者固有のAuthやLINE Bindingは契約後のREADY工程です。</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="section docs">
+  <div class="shell docs__grid">
+    <div>
+      <p class="kicker">GUIDE &amp; DOCUMENTS</p>
+      <h2>導入前に、実物と資料を確認。</h2>
+      <p>デモを触ったあと、必要な深さに応じて資料を確認できます。</p>
+    </div>
+    <div class="docs__links">
+      <a href="guide-center.html"><span>Guide Center</span><b>導入・役割・安全性を確認 ↗</b></a>
+      <a href="tutorial.html"><span>Tutorial</span><b>最初の操作を10ステップで ↗</b></a>
+      <a href="quick-start.html"><span>Quick Start</span><b>短時間で運用イメージを確認 ↗</b></a>
+      <a href="detailed-manual.html"><span>Detailed Manual</span><b>保存版の詳細マニュアル ↗</b></a>
+      <a href="a4-flyer.html"><span>A4 Flyer</span><b>一枚で概要を確認 ↗</b></a>
+      <a href="lp.html"><span>Detailed LP</span><b>詳しい導入説明を見る ↗</b></a>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="shell final-cta__grid">
+    <div>
+      <p class="kicker kicker--light">NEXT STEP</p>
+      <h2>相談する。知る。試す。<br>DPROを、もっと近くに。</h2>
+      <p>まずはLIVE DEMOで、造園・外構の業務がどうつながるかを確認してください。</p>
+      <div class="hero__actions">
+        <a class="btn btn--accent" href="index.html">LIVE DEMOを試す ↗</a>
+        <a class="btn btn--outline-light" href="lp.html">詳しい説明を見る ↗</a>
+      </div>
+    </div>
+    <div class="final-links">
+      <a href="guide-center.html">詳しい操作を見る <b>↗</b></a>
+      <a href="tutorial.html">Tutorialを始める <b>↗</b></a>
+      <a href="owner.html">Owner画面を見る <b>↗</b></a>
+      <a href="system-check.html">System Checkを見る <b>↗</b></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="shell footer__inner">
+    <span>DPRO LINE SYSTEMS / LANDSCAPE &amp; EXTERIOR</span>
+    <span>STANDARD PRODUCT V1.0</span>
+  </div>
+</footer>
+</body>
+</html>
