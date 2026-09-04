@@ -55,20 +55,66 @@ jobs:
       - name: Prepare certified presentation files
         run: |
           set -euo pipefail
-          # LP Master V1.4 has two real image elements: P1 field photo and P10 consultation photo.
-          # P9 is the current Owner screen via iframe, so it must not be counted as an img element.
+          # Certified print masters use iframes for current LIVE screens.
+          # Only actual <img> elements are replaced here; live iframes remain live.
           python - <<'PY'
           from pathlib import Path
           p=Path('tools/dpro53_reaudit.py')
           s=p.read_text(encoding='utf-8')
-          old="patch_images(SITE/'lp.html',['landscape-hero.jpg','owner-screen.jpg','landscape-consult.jpg'])"
-          new="patch_images(SITE/'lp.html',['landscape-hero.jpg','landscape-consult.jpg'])"
-          if old not in s:
-              raise SystemExit('Expected LP image patch signature was not found')
-          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          replacements={
+            "patch_images(SITE/'lp.html',['landscape-hero.jpg','owner-screen.jpg','landscape-consult.jpg'])":
+              "patch_images(SITE/'lp.html',['landscape-hero.jpg','landscape-consult.jpg'])",
+            "patch_images(SITE/'quick-start.html',['qr-guide.svg','qr-tutorial.svg','qa-owner-screen.png','qa-system-check-screen.png','qr-system-check.svg'])":
+              "patch_images(SITE/'quick-start.html',['qr-guide.svg','qr-tutorial.svg','qr-system-check.svg'])",
+            "patch_images(SITE/'detailed-manual.html',['qr-guide.svg','qa-owner-screen.png','qr-tutorial.svg','qa-owner-screen.png','qa-staff-screen.png','qa-customer-screen.png','qa-system-check-screen.png','qr-system-check.svg','qr-guide.svg','qr-tutorial.svg'])":
+              "patch_images(SITE/'detailed-manual.html',['qr-guide.svg','qr-tutorial.svg','qr-system-check.svg'])",
+          }
+          for old,new in replacements.items():
+              if old not in s:
+                  raise SystemExit('Expected image patch signature was not found: '+old)
+              s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
           PY
           python -m py_compile tools/dpro53_reaudit.py
           python tools/dpro53_reaudit.py prepare
+
+          # The certified source masters are stored under site/presentation-v12/.
+          # After copying them to the public site root, relocate only their relative links/iframes.
+          python - <<'PY'
+          from pathlib import Path
+          fixes={
+            'site/lp.html':{
+              'href="../product-site.html"':'href="product-site.html"',
+              'href="../official-site.html"':'href="official-site.html"',
+              "previewFrame.src='../owner.html'":"previewFrame.src='owner.html'",
+              'src="../" title="DPRO造園・外構 LIVE DEMO"':'src="index.html" title="DPRO造園・外構 LIVE DEMO"',
+            },
+            'site/guide-center.html':{
+              'href="../../"':'href="index.html"',
+              'href="../../customer.html"':'href="customer.html"',
+              'href="../../owner.html"':'href="owner.html"',
+              'href="../../staff.html"':'href="staff.html"',
+              'href="../../system-check.html"':'href="system-check.html"',
+            },
+            'site/quick-start.html':{
+              'src="../../owner.html"':'src="owner.html"',
+              'src="../../system-check.html"':'src="system-check.html"',
+            },
+            'site/detailed-manual.html':{
+              'src="../../owner.html"':'src="owner.html"',
+              'src="../../staff.html"':'src="staff.html"',
+              'src="../../customer.html"':'src="customer.html"',
+              'src="../../system-check.html"':'src="system-check.html"',
+            },
+          }
+          for filename,repls in fixes.items():
+              p=Path(filename); s=p.read_text(encoding='utf-8')
+              for old,new in repls.items():
+                  if old not in s:
+                      raise SystemExit(f'Expected relocation signature missing in {filename}: {old}')
+                  s=s.replace(old,new)
+              p.write_text(s,encoding='utf-8')
+          PY
 
       - name: Run FACTORY runtime QA
         run: |
@@ -139,6 +185,8 @@ jobs:
           cp CORE_SHA_AFTER.txt artifact-dpro53/reports/
           cp CORE_SHA_PROTECTION.txt artifact-dpro53/reports/
           cp tools/dpro53_reaudit.py artifact-dpro53/reports/DPRO53_REAUDIT_EFFECTIVE_TOOL.py
+          cp .github/workflows/dpro-53-final-reaudit.yml artifact-dpro53/reports/
+          cp .github/workflows/dpro-53-final-reaudit-apply.yml artifact-dpro53/reports/
           printf 'WORKFLOW_EVENT=workflow_dispatch\nWORKFLOW_RUN_ID=%s\nHEAD_SHA=%s\n' '${{ github.run_id }}' '${{ github.sha }}' > artifact-dpro53/reports/WORKFLOW_DISPATCH_EVIDENCE.txt
 
       - name: Upload passed artifact
