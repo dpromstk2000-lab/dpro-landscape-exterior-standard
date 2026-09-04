@@ -1,0 +1,121 @@
+name: DPRO 53 Apply Reaudit
+
+on:
+  workflow_run:
+    workflows: ["DPRO 53 Final Reaudit"]
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: dpro-53-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download passed re-audit artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dpro53-reaudit-passed
+          path: _dpro53_artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Verify current SYSTEM Core still matches audited baseline
+        run: |
+          set -euo pipefail
+          cut -d' ' -f3- _dpro53_artifact/reports/CORE_SHA_BEFORE.txt > /tmp/dpro53-core-files.txt
+          : > /tmp/dpro53-core-current.txt
+          while IFS= read -r f; do
+            test -f "$f"
+            sha256sum "$f" >> /tmp/dpro53-core-current.txt
+          done < /tmp/dpro53-core-files.txt
+          diff -u _dpro53_artifact/reports/CORE_SHA_BEFORE.txt /tmp/dpro53-core-current.txt
+
+      - name: Apply only approved presentation output
+        run: |
+          set -euo pipefail
+          cp -a _dpro53_artifact/site-final/. site/
+          cat > /tmp/dpro53-allowed.txt <<'EOF'
+          site/.dpro53-reaudit-ok.txt
+          site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.0_20260904.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_V1.0_20260902.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.1_20260904.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_V1.0_20260902.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.1_20260904.pdf
+          site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_V1.0_20260902.pdf
+          site/a4-flyer.html
+          site/detailed-manual.html
+          site/guide-center.html
+          site/landscape-consult.jpg
+          site/landscape-hero.jpg
+          site/lp.html
+          site/product-site-v2.css
+          site/qa-customer-screen.png
+          site/qa-owner-screen.png
+          site/qa-staff-screen.png
+          site/qa-system-check-screen.png
+          site/qr-demo.svg
+          site/qr-guide.svg
+          site/qr-line.svg
+          site/qr-shop.svg
+          site/qr-system-check.svg
+          site/qr-tutorial.svg
+          site/quick-start.html
+          EOF
+          sed -i 's/^          //' /tmp/dpro53-allowed.txt
+          { git diff --name-only -- site; git ls-files --others --exclude-standard -- site; } | sort -u > /tmp/dpro53-changed.txt
+          sort -u /tmp/dpro53-allowed.txt -o /tmp/dpro53-allowed.txt
+          echo 'Apply changed files:'
+          cat /tmp/dpro53-changed.txt
+          if comm -23 /tmp/dpro53-changed.txt /tmp/dpro53-allowed.txt | grep -q .; then
+            echo 'ERROR: apply scope violation'
+            comm -23 /tmp/dpro53-changed.txt /tmp/dpro53-allowed.txt
+            exit 1
+          fi
+
+      - name: Recheck SYSTEM Core after apply
+        run: |
+          set -euo pipefail
+          : > /tmp/dpro53-core-after-apply.txt
+          while IFS= read -r f; do
+            sha256sum "$f" >> /tmp/dpro53-core-after-apply.txt
+          done < /tmp/dpro53-core-files.txt
+          diff -u _dpro53_artifact/reports/CORE_SHA_BEFORE.txt /tmp/dpro53-core-after-apply.txt
+
+      - name: Commit audited presentation files
+        id: commit
+        run: |
+          set -euo pipefail
+          git config user.name 'dpro-factory-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- site
+          if git diff --cached --quiet; then
+            echo 'No presentation changes to commit.'
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m 'DPRO 53 final re-audit presentation sync'
+            git push origin HEAD:main
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch GitHub Pages after bot commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Final bot commit: ${{ steps.commit.outputs.sha }}"
+          gh workflow run deploy-pages.yml --ref main
+          echo 'Pages workflow dispatched after bot commit.'
