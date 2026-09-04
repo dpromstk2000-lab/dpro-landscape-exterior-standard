@@ -1,6 +1,6 @@
 name: DPRO 53 Bootstrap Dispatch
 
-# CENTRAL FIX R1 canonical Japanese-wrap QA hotfix applied.
+# CENTRAL FIX R1 canonical Japanese-wrap + LIVE visual evidence QA applied.
 on:
   push:
     branches: [main]
