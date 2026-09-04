@@ -55,6 +55,19 @@ jobs:
       - name: Prepare certified presentation files
         run: |
           set -euo pipefail
+          # LP Master V1.4 has two real image elements: P1 field photo and P10 consultation photo.
+          # P9 is the current Owner screen via iframe, so it must not be counted as an img element.
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tools/dpro53_reaudit.py')
+          s=p.read_text(encoding='utf-8')
+          old="patch_images(SITE/'lp.html',['landscape-hero.jpg','owner-screen.jpg','landscape-consult.jpg'])"
+          new="patch_images(SITE/'lp.html',['landscape-hero.jpg','landscape-consult.jpg'])"
+          if old not in s:
+              raise SystemExit('Expected LP image patch signature was not found')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+          python -m py_compile tools/dpro53_reaudit.py
           python tools/dpro53_reaudit.py prepare
 
       - name: Run FACTORY runtime QA
@@ -125,6 +138,7 @@ jobs:
           cp CORE_SHA_BEFORE.txt artifact-dpro53/reports/
           cp CORE_SHA_AFTER.txt artifact-dpro53/reports/
           cp CORE_SHA_PROTECTION.txt artifact-dpro53/reports/
+          cp tools/dpro53_reaudit.py artifact-dpro53/reports/DPRO53_REAUDIT_EFFECTIVE_TOOL.py
           printf 'WORKFLOW_EVENT=workflow_dispatch\nWORKFLOW_RUN_ID=%s\nHEAD_SHA=%s\n' '${{ github.run_id }}' '${{ github.sha }}' > artifact-dpro53/reports/WORKFLOW_DISPATCH_EVIDENCE.txt
 
       - name: Upload passed artifact
