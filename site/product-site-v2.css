@@ -76,3 +76,6 @@ a{color:inherit}.shell{width:min(1160px,calc(100% - 40px));margin-inline:auto}
 @media(max-width:420px){
   .hero h1{font-size:2.25rem}.flow-grid{grid-template-columns:1fr}.hero__actions .btn{width:100%}.section-head h2,.live h2,.docs h2,.final-cta h2{font-size:1.9rem}
 }
+
+/* DPRO Japanese wrap guard V2.1 */
+@media(max-width:420px){#price .section-head h2{font-size:1.82rem;letter-spacing:-.045em;overflow-wrap:normal;word-break:normal}}
