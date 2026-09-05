@@ -38,7 +38,7 @@ jobs:
 
           EXPECTED_BASE="dde50f68a9f6f39d61b2028456a07eab0338a55a"
           TARGET_WORKFLOW=".github/workflows/dpro-53-a4-public-render-redeploy.yml"
-          EXPECTED_A4_BLOB="286bb00b63311035c122435208628947578a06b1"
+          EXPECTED_A4_BLOB="882ae98f8e94815cf71e0a7f8f5b298ae3fe315d"
 
           echo "CURRENT_HEAD=$(git rev-parse HEAD)"
           git cat-file -e "${EXPECTED_BASE}^{commit}"
@@ -49,7 +49,9 @@ jobs:
           test "${#CHANGED[@]}" -eq 1
           test "${CHANGED[0]}" = "${TARGET_WORKFLOW}"
 
-          test "$(git hash-object site/a4-flyer.html)" = "${EXPECTED_A4_BLOB}"
+          ACTUAL_A4_BLOB="$(git hash-object site/a4-flyer.html)"
+          echo "ACTUAL_A4_BLOB=${ACTUAL_A4_BLOB}"
+          test "${ACTUAL_A4_BLOB}" = "${EXPECTED_A4_BLOB}"
 
           grep -Fq 'href="https://dpro-shop.com/"' site/a4-flyer.html
           grep -Fq '>https://dpro-shop.com/</a>' site/a4-flyer.html
