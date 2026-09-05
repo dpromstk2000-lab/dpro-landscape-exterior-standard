@@ -2,6 +2,10 @@ name: DPRO 53 Tutorial Navigation V1.2.2 QA
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/dpro-53-tutorial-navigation-v122-qa.yml'
 
 permissions:
   contents: read
@@ -115,7 +119,13 @@ jobs:
                 'back':r.get('desktop',{}).get('back'),
                 'resume':r.get('desktop',{}).get('resume_exact'),
                 'replay':r.get('desktop',{}).get('replay'),
-                'esc':r.get('desktop',{}).get('esc_close'),
+                'close':r.get('desktop',{}).get('close'),
+                'esc':r.get('desktop',{}).get('esc'),
+                'keyboard_enter':r.get('desktop',{}).get('keyboard_enter'),
+                'keyboard_space':r.get('desktop',{}).get('keyboard_space'),
+                'tab_controls':r.get('desktop',{}).get('tab_controls'),
+                'visible_focus':r.get('desktop',{}).get('visible_focus'),
+                'no_bad_focus_trap':r.get('desktop',{}).get('no_bad_focus_trap'),
                 'target_missing':r.get('target_missing'),
                 'guide_center':r.get('guide_center'),
                 'business_mutation_count':r.get('business_mutation_count'),
@@ -127,7 +137,7 @@ jobs:
               }
           (out/'FINAL_QA_REPORT.json').write_text(json.dumps(final,ensure_ascii=False,indent=2),encoding='utf-8')
           lines=['# DPRO #53 Tutorial Navigation V1.2.2 Final QA','',f"Status: **{final.get('status')}**",'']
-          for k in ['first10_count','start','next','back','resume','replay','esc','business_mutation_count','console_error_count','request_error_count','wrong_route_count','wrong_target_count','viewports']:
+          for k in ['first10_count','start','next','back','resume','replay','close','esc','keyboard_enter','keyboard_space','tab_controls','visible_focus','no_bad_focus_trap','business_mutation_count','console_error_count','request_error_count','wrong_route_count','wrong_target_count','viewports']:
               if k in final: lines.append(f"{k}: {final.get(k)}")
           (out/'FINAL_QA_REPORT.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
           PY
