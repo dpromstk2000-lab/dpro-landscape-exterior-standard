@@ -10,14 +10,17 @@ on:
       - 'site/detailed-manual.html'
       - 'presentation-qa/support-sync-v1.2.2/support_sync_qa.mjs'
       - 'presentation-qa/support-sync-v1.2.2/build_pdfs.mjs'
+      - 'presentation-qa/support-sync-v1.2.2/finalize_support_sync.py'
       - '.github/workflows/dpro-53-support-sync-v122-qa.yml'
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: dpro-53-support-sync-v122-qa
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   START_HEAD: c8071ad4656eda253313fbe99c75994b23925bb0
@@ -28,6 +31,8 @@ jobs:
   support_sync:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment:
+      name: github-pages
     steps:
       - name: Checkout current main
         uses: actions/checkout@v6
@@ -35,49 +40,41 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Verify allowed scope and frozen blobs
+      - name: Verify scope and frozen baseline
         run: |
           set -euo pipefail
-          git diff --name-only "$START_HEAD"..HEAD | tee /tmp/changed_pre.txt
+          git diff --name-only "$START_HEAD"..HEAD | tee /tmp/changed.txt
           while IFS= read -r f; do
             case "$f" in
-              site/guide-center.html|site/quick-start.html|site/detailed-manual.html|presentation-qa/support-sync-v1.2.2/support_sync_qa.mjs|presentation-qa/support-sync-v1.2.2/build_pdfs.mjs|.github/workflows/dpro-53-support-sync-v122-qa.yml) ;;
-              *) echo "UNPERMITTED PRE-GENERATION CHANGE: $f"; exit 1;;
+              site/guide-center.html|site/quick-start.html|site/detailed-manual.html|site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf|site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf|presentation-qa/support-sync-v1.2.2/*|.github/workflows/dpro-53-support-sync-v122-qa.yml) ;;
+              *) echo "UNPERMITTED CHANGE: $f"; exit 1;;
             esac
-          done < /tmp/changed_pre.txt
-          declare -A expected=(
-            [site/tutorial.html]=6e464117b363bec16bbe99644b1e1c6cad9e7312
-            [site/index.html]=4fa71bfbb41562a5226221a75a2b6351e830008d
-            [site/owner.html]=d55da6f9a3cbbcae6f74285e22df603d0afa2758
-            [site/staff.html]=9012ba0800f7cd19350e343d6b1511804a6a803c
-            [site/customer.html]=04e4902c11cc4d6491f97fd4224b4e07d933adce
-            [site/system-check.html]=9033ac33af6570064c51cded566e4fa54628c808
-            [site/app-core.js]=a907e05db641b23bd39162263191e51240d9d868
-            [site/app.css]=4365341d0cd17d85374ce813a5a27341cf83e3d0
-            [site/auth-client.js]=80567163fe5c332f8fbe7223ab7908e141f0d10e
-            [site/config.js]=e69818433b0568f5bec1b3e9e65d3967ae6003de
-            [worker/worker.js]=983df0e93feecb15f9613f939d6d264997b740a5
-            [schema.sql]=c930aafcc941e98cb4933a9ba284c334ae9ac40a
-            [site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.0_20260904.pdf]=ed5c5c330c8ef51562b8809b461099b9cef1efa3
-          )
-          for f in "${!expected[@]}"; do
-            actual="$(git rev-parse "HEAD:$f")"
-            test "$actual" = "${expected[$f]}" || { echo "FROZEN SHA CHANGED: $f $actual"; exit 1; }
-          done
-          grep -q 'GUIDE CENTER V1.2.2' site/guide-center.html
-          grep -q 'QUICK START MASTER V1.2.2' site/quick-start.html
-          grep -q 'DETAILED MANUAL MASTER V1.2.2' site/detailed-manual.html
+          done < /tmp/changed.txt
+          test "$(git rev-parse HEAD:site/tutorial.html)" = 6e464117b363bec16bbe99644b1e1c6cad9e7312
+          test "$(git rev-parse HEAD:site/index.html)" = 4fa71bfbb41562a5226221a75a2b6351e830008d
+          test "$(git rev-parse HEAD:site/owner.html)" = d55da6f9a3cbbcae6f74285e22df603d0afa2758
+          test "$(git rev-parse HEAD:site/staff.html)" = 9012ba0800f7cd19350e343d6b1511804a6a803c
+          test "$(git rev-parse HEAD:site/customer.html)" = 04e4902c11cc4d6491f97fd4224b4e07d933adce
+          test "$(git rev-parse HEAD:site/system-check.html)" = 9033ac33af6570064c51cded566e4fa54628c808
+          test "$(git rev-parse HEAD:site/app-core.js)" = a907e05db641b23bd39162263191e51240d9d868
+          test "$(git rev-parse HEAD:site/app.css)" = 4365341d0cd17d85374ce813a5a27341cf83e3d0
+          test "$(git rev-parse HEAD:site/auth-client.js)" = 80567163fe5c332f8fbe7223ab7908e141f0d10e
+          test "$(git rev-parse HEAD:site/config.js)" = e69818433b0568f5bec1b3e9e65d3967ae6003de
+          test "$(git rev-parse HEAD:worker/worker.js)" = 983df0e93feecb15f9613f939d6d264997b740a5
+          test "$(git rev-parse HEAD:schema.sql)" = c930aafcc941e98cb4933a9ba284c334ae9ac40a
+          test "$(git rev-parse HEAD:site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.0_20260904.pdf)" = ed5c5c330c8ef51562b8809b461099b9cef1efa3
           test "$(grep -o 'data-page=' site/quick-start.html | wc -l)" -eq 3
           test "$(grep -o 'data-page=' site/detailed-manual.html | wc -l)" -eq 10
           node --check presentation-qa/support-sync-v1.2.2/support_sync_qa.mjs
           node --check presentation-qa/support-sync-v1.2.2/build_pdfs.mjs
+          python3 -m py_compile presentation-qa/support-sync-v1.2.2/finalize_support_sync.py
 
-      - name: Set up Node and PDF tools
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install Playwright and render tools
+      - name: Install runtime PDF QA tools
         run: |
           set -euo pipefail
           npm init -y >/dev/null 2>&1
@@ -87,298 +84,89 @@ jobs:
           sudo apt-get install -y poppler-utils zbar-tools fonts-noto-cjk >/dev/null
           python3 -m pip install --quiet pillow
 
-      - name: Wait for Pages and capture fresh runtime screenshots
+      - name: Capture fresh Pages runtime and Guide/Tutorial QA
         run: node presentation-qa/support-sync-v1.2.2/support_sync_qa.mjs
 
-      - name: Build PDFs from final support HTML and fresh screenshots
+      - name: Build final Quick and Detailed PDFs
         run: |
           set -euo pipefail
           python3 -m http.server 4173 --bind 127.0.0.1 --directory . >/tmp/dpro53-http.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
+          pid=$!
+          trap 'kill $pid || true' EXIT
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/site/quick-start.html >/dev/null && break; sleep 1; done
           node presentation-qa/support-sync-v1.2.2/build_pdfs.mjs
-          kill $SERVER_PID || true
+          kill $pid || true
           trap - EXIT
 
-      - name: Render PDFs and decode all QR from rendered pages
-        run: |
-          set -euo pipefail
-          out='presentation-qa/support-sync-v1.2.2/runtime-output'
-          mkdir -p "$out/rendered-quick" "$out/rendered-detailed"
-          Q='site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf'
-          D='site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf'
-          pdfinfo "$Q" > "$out/quick-pdfinfo.txt"
-          pdfinfo "$D" > "$out/detailed-pdfinfo.txt"
-          grep -q '^Pages:[[:space:]]*3$' "$out/quick-pdfinfo.txt"
-          grep -q '^Pages:[[:space:]]*10$' "$out/detailed-pdfinfo.txt"
-          grep -q 'Page size:.*A4' "$out/quick-pdfinfo.txt"
-          grep -q 'Page size:.*A4' "$out/detailed-pdfinfo.txt"
-          pdftoppm -png -r 180 "$Q" "$out/rendered-quick/page" >/dev/null 2>&1
-          pdftoppm -png -r 180 "$D" "$out/rendered-detailed/page" >/dev/null 2>&1
-          : > "$out/PDF_QR_DECODE_EVIDENCE.txt"
-          qcount=0
-          dcount=0
-          for f in "$out"/rendered-quick/*.png; do
-            vals="$(zbarimg --quiet --raw "$f" 2>/dev/null || true)"
-            if [ -n "$vals" ]; then
-              while IFS= read -r v; do [ -n "$v" ] && { qcount=$((qcount+1)); printf 'QUICK %s => %s\n' "$(basename "$f")" "$v" >> "$out/PDF_QR_DECODE_EVIDENCE.txt"; }; done <<< "$vals"
-            fi
-          done
-          for f in "$out"/rendered-detailed/*.png; do
-            vals="$(zbarimg --quiet --raw "$f" 2>/dev/null || true)"
-            if [ -n "$vals" ]; then
-              while IFS= read -r v; do [ -n "$v" ] && { dcount=$((dcount+1)); printf 'DETAILED %s => %s\n' "$(basename "$f")" "$v" >> "$out/PDF_QR_DECODE_EVIDENCE.txt"; }; done <<< "$vals"
-            fi
-          done
-          echo "quick_expected=3 quick_decoded=$qcount" >> "$out/PDF_QR_DECODE_EVIDENCE.txt"
-          echo "detailed_expected=4 detailed_decoded=$dcount" >> "$out/PDF_QR_DECODE_EVIDENCE.txt"
-          test "$qcount" -eq 3
-          test "$dcount" -eq 4
-
-      - name: Automated rendered-page and content QA
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import json, pathlib, re
-          from PIL import Image, ImageStat, ImageOps, ImageDraw
-          root=pathlib.Path('.')
-          out=root/'presentation-qa/support-sync-v1.2.2/runtime-output'
-          def render_qa(folder, expected):
-              imgs=sorted(folder.glob('*.png'))
-              assert len(imgs)==expected,(folder,len(imgs),expected)
-              rows=[]
-              thumbs=[]
-              blank=0
-              for p in imgs:
-                  im=Image.open(p).convert('RGB')
-                  stat=ImageStat.Stat(im.resize((80,110)).convert('L'))
-                  mean=stat.mean[0]; sd=stat.stddev[0]
-                  is_blank=mean>252 and sd<2
-                  blank+=int(is_blank)
-                  rows.append({'file':p.name,'width':im.width,'height':im.height,'mean_gray':round(mean,2),'stddev':round(sd,2),'blank':is_blank})
-                  t=ImageOps.contain(im,(220,310)); thumbs.append((p.name,t.copy()))
-              assert blank==0,(folder,'blank pages',blank)
-              cols=4; cellw=240; cellh=340; rowsn=(len(thumbs)+cols-1)//cols
-              sheet=Image.new('RGB',(cols*cellw,rowsn*cellh),'white'); d=ImageDraw.Draw(sheet)
-              for i,(name,t) in enumerate(thumbs):
-                  x=(i%cols)*cellw+10; y=(i//cols)*cellh+20; sheet.paste(t,(x,y+20)); d.text((x,y),name,fill='black')
-              return rows,sheet
-          qrows,qs=render_qa(out/'rendered-quick',3); qs.save(out/'quick-render-contact.png')
-          drows,ds=render_qa(out/'rendered-detailed',10); ds.save(out/'detailed-render-contact.png')
-          quick_layout=json.loads((out/'QUICK_LAYOUT_QA.json').read_text())
-          detail_layout=json.loads((out/'DETAILED_LAYOUT_QA.json').read_text())
-          def info(name):
-              t=(out/name).read_text(errors='replace')
-              pages=int(re.search(r'^Pages:\s+(\d+)',t,re.M).group(1))
-              a4=bool(re.search(r'^Page size:.*A4',t,re.M))
-              return {'pages':pages,'a4_portrait':a4}
-          qinfo=info('quick-pdfinfo.txt'); dinfo=info('detailed-pdfinfo.txt')
-          qr=(out/'PDF_QR_DECODE_EVIDENCE.txt').read_text()
-          qdec=int(re.search(r'quick_decoded=(\d+)',qr).group(1)); ddec=int(re.search(r'detailed_decoded=(\d+)',qr).group(1))
-          qq={'status':'PASS','pages_exactly':qinfo['pages'],'a4_portrait':qinfo['a4_portrait'],'layout':quick_layout,'rendered_pages':qrows,'blank_pages':sum(x['blank'] for x in qrows),'qr_expected':3,'qr_decoded':qdec,'qr_failures':3-qdec,'clipping':0,'overlap':0,'japanese_wrap_errors':0}
-          dq={'status':'PASS','pages_exactly':dinfo['pages'],'a4_portrait':dinfo['a4_portrait'],'layout':detail_layout,'rendered_pages':drows,'blank_pages':sum(x['blank'] for x in drows),'qr_expected':4,'qr_decoded':ddec,'qr_failures':4-ddec,'clipping':0,'overlap':0,'japanese_wrap_errors':0}
-          (out/'QUICK_START_QA.json').write_text(json.dumps(qq,ensure_ascii=False,indent=2),encoding='utf-8')
-          (out/'DETAILED_MANUAL_QA.json').write_text(json.dumps(dq,ensure_ascii=False,indent=2),encoding='utf-8')
-          required=['First10','Start','Resume','Replay','Back','Next','Close','Esc','TARGET_MISSING','Retry','Guide Center','scroll','highlight','business mutation','Public','Owner','写真ポイント','見積根拠','Staff','After','Customer','Before','完了承認','System Check']
-          files=['site/guide-center.html','site/quick-start.html','site/detailed-manual.html']
-          checks={}
-          for f in files:
-              text=(root/f).read_text(encoding='utf-8')
-              checks[f]={k:(k in text) for k in required}
-          missing=[k for k in required if not any(checks[f][k] for f in files)]
-          critical=['Start','Resume','Replay','Back','Next','Close','Esc','TARGET_MISSING','Retry','Guide Center','business mutation']
-          critical_missing=[k for k in critical if not checks['site/guide-center.html'].get(k,False) or not checks['site/detailed-manual.html'].get(k,False)]
-          status='PASS' if not missing and not critical_missing else 'FAIL'
-          data={'status':status,'required_terms':required,'missing':missing,'critical_missing':critical_missing,'files':checks}
-          (out/'SUPPORT_CONTENT_QA.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
-          assert status=='PASS',data
-          PY
-
-      - name: Create pre-push freeze evidence
-        run: |
-          set -euo pipefail
-          out='presentation-qa/support-sync-v1.2.2/runtime-output'
-          {
-            echo 'TUTORIAL_FREEZE=PASS'
-            echo "EXPECTED=6e464117b363bec16bbe99644b1e1c6cad9e7312"
-            echo "ACTUAL=$(git rev-parse HEAD:site/tutorial.html)"
-          } > "$out/TUTORIAL_FREEZE_EVIDENCE.txt"
-          {
-            echo 'NO_CORE_CHANGE=PASS'
-            for f in site/index.html site/owner.html site/staff.html site/customer.html site/system-check.html site/app-core.js site/app.css site/auth-client.js site/config.js worker/worker.js schema.sql site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.0_20260904.pdf; do
-              echo "$f $(git rev-parse HEAD:$f)"
-            done
-          } > "$out/NO_CORE_CHANGE_EVIDENCE.txt"
+      - name: Render every PDF page, decode every QR, content and freeze QA
+        run: python3 presentation-qa/support-sync-v1.2.2/finalize_support_sync.py pre
 
       - name: Commit generated PDFs and fresh screenshots
         run: |
           set -euo pipefail
           git config user.name 'dpromstk2000-lab'
           git config user.email 'dpromstk2000@gmail.com'
-          git add \
-            site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf \
-            site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf \
-            presentation-qa/support-sync-v1.2.2/screens/*.png
-          if git diff --cached --quiet; then
-            echo 'Generated PDFs/screenshots unchanged; no generation commit needed.'
-          else
+          git add site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf \
+                  site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf \
+                  presentation-qa/support-sync-v1.2.2/screens/*.png
+          if ! git diff --cached --quiet; then
             git commit -m 'DPRO 53 Support Sync V1.2.2 generated PDFs and screenshots'
             git push origin HEAD:main
           fi
           echo "FINAL_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
-      - name: Verify final main and final Pages deployment
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload final site to Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy final site to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify final main and deployed PDF hashes
         run: |
           set -euo pipefail
           out='presentation-qa/support-sync-v1.2.2/runtime-output'
-          remote="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
-          test "$remote" = "$FINAL_HEAD"
-          Q='site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf'
-          D='site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf'
-          qsha="$(sha256sum "$Q" | awk '{print $1}')"
-          dsha="$(sha256sum "$D" | awk '{print $1}')"
+          test "$(git ls-remote origin refs/heads/main | awk '{print $1}')" = "$FINAL_HEAD"
+          q='site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf'
+          d='site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf'
+          qsha="$(sha256sum "$q" | awk '{print $1}')"; dsha="$(sha256sum "$d" | awk '{print $1}')"
           ok=0
-          for i in $(seq 1 90); do
-            if curl -fsS "${DPRO_BASE_URL}guide-center.html?v=$FINAL_HEAD" -o /tmp/guide.html \
-              && grep -q 'GUIDE CENTER V1.2.2' /tmp/guide.html \
+          for i in $(seq 1 30); do
+            if curl -fsS "${DPRO_BASE_URL}guide-center.html?v=$FINAL_HEAD" -o /tmp/g.html \
+              && grep -q 'GUIDE CENTER V1.2.2' /tmp/g.html \
               && curl -fsS "${DPRO_BASE_URL}DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf?v=$FINAL_HEAD" -o /tmp/q.pdf \
               && curl -fsS "${DPRO_BASE_URL}DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf?v=$FINAL_HEAD" -o /tmp/d.pdf; then
-              rq="$(sha256sum /tmp/q.pdf | awk '{print $1}')"; rd="$(sha256sum /tmp/d.pdf | awk '{print $1}')"
-              if [ "$rq" = "$qsha" ] && [ "$rd" = "$dsha" ]; then ok=1; break; fi
+              test "$(sha256sum /tmp/q.pdf | awk '{print $1}')" = "$qsha" && test "$(sha256sum /tmp/d.pdf | awk '{print $1}')" = "$dsha" && { ok=1; break; }
             fi
-            sleep 4
+            sleep 3
           done
           test "$ok" -eq 1
-          {
-            echo "PAGES=PASS"
-            echo "FINAL_HEAD=$FINAL_HEAD"
-            echo "GUIDE_URL=${DPRO_BASE_URL}guide-center.html"
-            echo "QUICK_URL=${DPRO_BASE_URL}DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf"
-            echo "DETAILED_URL=${DPRO_BASE_URL}DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf"
-            echo "QUICK_SHA256=$qsha"
-            echo "DETAILED_SHA256=$dsha"
-            echo "REMOTE_QUICK_SHA256=$(sha256sum /tmp/q.pdf | awk '{print $1}')"
-            echo "REMOTE_DETAILED_SHA256=$(sha256sum /tmp/d.pdf | awk '{print $1}')"
-          } > "$out/PAGES_EVIDENCE.txt"
-          {
-            echo "SUPPORT_SYNC_BLOCKING_STEPS=PASS"
-            echo "PAGES=PASS"
-            echo "WORKFLOW_RUN_ID=$GITHUB_RUN_ID"
-            echo "WORKFLOW_RUN_URL=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-            echo "FINAL_HEAD=$FINAL_HEAD"
-            echo "NOTE=actual workflow conclusion is verified after run completion by CENTRAL/worker"
-          } > "$out/WORKFLOW_PAGES_RESULT.txt"
-
-      - name: Build final evidence and flat return ZIP
-        run: |
-          set -euo pipefail
-          out='presentation-qa/support-sync-v1.2.2/runtime-output'
-          git diff --name-only "$START_HEAD"..HEAD | tee "$out/CHANGED_FILES.txt"
-          while IFS= read -r f; do
-            case "$f" in
-              site/guide-center.html|site/quick-start.html|site/detailed-manual.html|site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf|site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf|presentation-qa/support-sync-v1.2.2/*|presentation-qa/support-sync-v1.2.2/screens/*|.github/workflows/dpro-53-support-sync-v122-qa.yml) ;;
-              *) echo "UNPERMITTED FINAL CHANGE: $f"; exit 1;;
-            esac
-          done < "$out/CHANGED_FILES.txt"
-          test "$(git rev-parse HEAD:site/tutorial.html)" = '6e464117b363bec16bbe99644b1e1c6cad9e7312'
-          {
-            echo "START_HEAD=$START_HEAD"
-            echo "FINAL_HEAD=$FINAL_HEAD"
-            for f in site/tutorial.html site/guide-center.html site/quick-start.html site/detailed-manual.html site/index.html site/owner.html site/staff.html site/customer.html site/system-check.html site/app-core.js site/app.css site/auth-client.js site/config.js worker/worker.js schema.sql site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.0_20260904.pdf; do
-              echo "$f START=$(git rev-parse "$START_HEAD:$f" 2>/dev/null || echo NEW) FINAL=$(git rev-parse "HEAD:$f")"
-            done
-          } > "$out/BEFORE_AFTER_SHA.txt"
-          cat > "$out/00_RETURN_SUMMARY.txt" <<TXT
-          DPRO #53 造園・外構 SUPPORT SYNCHRONIZATION V1.2.2
-          STATUS=SUPPORT_SYNC_COMPLETE / CENTRAL_INDEPENDENT_ACCEPTANCE_REQUIRED
-          START_HEAD=$START_HEAD
+          cat > "$out/PAGES_EVIDENCE.txt" <<TXT
+          PAGES=PASS
           FINAL_HEAD=$FINAL_HEAD
-          Tutorial V1.2.2 and System Core remained frozen.
-          Guide / Quick Start / Detailed Manual synchronized to Tutorial V1.2.2.
-          Quick PDF=A4 portrait exactly 3 pages.
-          Detailed PDF=A4 portrait exactly 10 pages.
-          Fresh screenshots captured from current Pages runtime and embedded in final PDF rendering.
-          TARGET_MISSING blocking / Retry / Guide recovery documented.
-          Rendered-PDF QR decode failures=0.
-          Guide 390/768/1440 responsive QA=PASS.
-          Broken links=0.
-          Business mutations observed during Tutorial QA=0.
-          Pages final PDF hash match=PASS.
-          WHOLE_PRODUCT_FINAL_COMPLETE=NOT_DECLARED.
+          DEPLOYMENT_URL=${{ steps.deployment.outputs.page_url }}
+          GUIDE_URL=${DPRO_BASE_URL}guide-center.html
+          QUICK_URL=${DPRO_BASE_URL}DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf
+          DETAILED_URL=${DPRO_BASE_URL}DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf
+          QUICK_SHA256=$qsha
+          DETAILED_SHA256=$dsha
           TXT
-          cat > "$out/STATUS.txt" <<TXT
-          #53 LANDSCAPE_EXTERIOR
-          CORE=FROZEN
-          TUTORIAL_V1.2.2=CENTRAL_ACCEPT_FROZEN
-          GUIDE=SUPPORT_SYNC_COMPLETE
-          QUICK=SUPPORT_SYNC_COMPLETE
-          DETAILED=SUPPORT_SYNC_COMPLETE
-          A4=KEEP
-          LP=KEEP
-          CENTRAL_ACCEPTANCE=PENDING_INDEPENDENT_CHECK
+          cat > "$out/WORKFLOW_PAGES_RESULT.txt" <<TXT
+          SUPPORT_SYNC_BLOCKING_STEPS=PASS
+          PAGES=PASS
+          WORKFLOW_RUN_ID=$GITHUB_RUN_ID
+          WORKFLOW_RUN_URL=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          FINAL_HEAD=$FINAL_HEAD
+          DIRECT_PAGES_DEPLOY=PASS
           TXT
-          cat > "$out/HANDOFF.txt" <<TXT
-          Return to CENTRAL for independent acceptance using this ZIP only.
-          Do not reopen Tutorial V1.2.2 or frozen Core in this phase.
-          Verify final main, workflow conclusion, Pages conclusion, PDF visual/QR evidence, and blockers=0.
-          TXT
-          cat > "$out/NEXT_ACTION.txt" <<TXT
-          CENTRAL: independently verify final main and workflow/Pages SUCCESS, then apply the acceptance checklist. Do not declare whole-product FINAL COMPLETE from this support-sync package alone.
-          TXT
-          python3 - <<'PY'
-          import json, pathlib
-          out=pathlib.Path('presentation-qa/support-sync-v1.2.2/runtime-output')
-          guide=json.loads((out/'GUIDE_CENTER_RUNTIME_QA.json').read_text())
-          content=json.loads((out/'SUPPORT_CONTENT_QA.json').read_text())
-          q=json.loads((out/'QUICK_START_QA.json').read_text())
-          d=json.loads((out/'DETAILED_MANUAL_QA.json').read_text())
-          broken=json.loads((out/'BROKEN_LINK_QA.json').read_text())
-          runtime=json.loads((out/'SUPPORT_RUNTIME_QA.json').read_text())
-          report={
-            'status':'PASS','blockers':[], 'whole_product_final_complete':False,
-            'tutorial_frozen':True,'core_frozen':True,
-            'guide_runtime':guide.get('status')=='PASS',
-            'guide_viewports':['390','768','1440'],
-            'support_content':content.get('status'),
-            'quick_pages':q.get('pages_exactly'),'quick_a4':q.get('a4_portrait'),'quick_qr_failures':q.get('qr_failures'),
-            'detailed_pages':d.get('pages_exactly'),'detailed_a4':d.get('a4_portrait'),'detailed_qr_failures':d.get('qr_failures'),
-            'broken_links':len([x for x in broken.get('links',[]) if not x.get('ok')]),
-            'business_mutation_count':len(runtime.get('business_mutations',[])),
-            'target_missing':runtime.get('tutorial',{}).get('target_missing'),
-            'pages':'PASS'
-          }
-          assert report['guide_runtime'] and report['support_content']=='PASS' and report['quick_pages']==3 and report['detailed_pages']==10 and report['quick_qr_failures']==0 and report['detailed_qr_failures']==0 and report['broken_links']==0 and report['business_mutation_count']==0
-          (out/'FINAL_QA_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
-          lines=['# DPRO #53 Support Sync V1.2.2 Final QA','',f"Status: **{report['status']}**",'',f"Tutorial frozen: {report['tutorial_frozen']}",f"Core frozen: {report['core_frozen']}",f"Guide runtime: {report['guide_runtime']}",f"Guide viewports: {', '.join(report['guide_viewports'])}",f"Quick: {report['quick_pages']} pages / QR failures {report['quick_qr_failures']}",f"Detailed: {report['detailed_pages']} pages / QR failures {report['detailed_qr_failures']}",f"Broken links: {report['broken_links']}",f"Business mutations: {report['business_mutation_count']}",f"TARGET_MISSING: {report['target_missing']}",f"Pages: {report['pages']}",'','Whole product FINAL COMPLETE is not declared by this package.']
-          (out/'FINAL_QA_REPORT.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
-          PY
-          stage='/tmp/dpro53-return-flat'
-          rm -rf "$stage" && mkdir -p "$stage"
-          cp "$out/00_RETURN_SUMMARY.txt" "$out/STATUS.txt" "$out/HANDOFF.txt" "$out/NEXT_ACTION.txt" "$out/CHANGED_FILES.txt" "$out/BEFORE_AFTER_SHA.txt" "$out/GUIDE_CENTER_RUNTIME_QA.json" "$out/SUPPORT_CONTENT_QA.json" "$out/QUICK_START_QA.json" "$out/DETAILED_MANUAL_QA.json" "$out/PDF_QR_DECODE_EVIDENCE.txt" "$out/BROKEN_LINK_QA.json" "$out/NO_CORE_CHANGE_EVIDENCE.txt" "$out/TUTORIAL_FREEZE_EVIDENCE.txt" "$out/VISUAL_QA_RESULT.txt" "$out/WORKFLOW_PAGES_RESULT.txt" "$out/PAGES_EVIDENCE.txt" "$out/FINAL_QA_REPORT.json" "$out/FINAL_QA_REPORT.md" "$stage/"
-          cp site/guide-center.html site/quick-start.html site/detailed-manual.html "$stage/"
-          cp site/DPRO_LANDSCAPE_EXTERIOR_QUICK_START_MASTER_V1.2.2_20260905.pdf site/DPRO_LANDSCAPE_EXTERIOR_DETAILED_MANUAL_MASTER_V1.2.2_20260905.pdf "$stage/"
-          cp .github/workflows/dpro-53-support-sync-v122-qa.yml "$stage/"
-          cp presentation-qa/support-sync-v1.2.2/support_sync_qa.mjs presentation-qa/support-sync-v1.2.2/build_pdfs.mjs "$stage/"
-          cp presentation-qa/support-sync-v1.2.2/screens/*.png "$stage/"
-          cp "$out/quick-render-contact.png" "$out/detailed-render-contact.png" "$stage/"
-          cp "$out/rendered-quick/page-1.png" "$stage/quick-render-page-1.png"
-          cp "$out/rendered-quick/page-3.png" "$stage/quick-render-page-3.png"
-          cp "$out/rendered-detailed/page-1.png" "$stage/detailed-render-page-1.png"
-          cp "$out/rendered-detailed/page-8.png" "$stage/detailed-render-page-8.png"
-          cp "$out/rendered-detailed/page-10.png" "$stage/detailed-render-page-10.png"
-          (cd "$stage" && sha256sum * | grep -v 'SHA256SUMS.txt' > SHA256SUMS.txt)
-          (cd "$stage" && zip -q -j "$GITHUB_WORKSPACE/$RETURN_NAME" *)
-          python3 - <<'PY'
-          import zipfile, os
-          name=os.environ['RETURN_NAME']
-          with zipfile.ZipFile(name) as z:
-              names=z.namelist()
-              assert all('/' not in n.rstrip('/') for n in names), names
-              assert len(names)==len(set(names)), 'duplicate names'
-              print('RETURN_ZIP_FILE_COUNT',len(names))
-              print('\n'.join(names))
-          PY
+
+      - name: Build flat CENTRAL return ZIP
+        run: python3 presentation-qa/support-sync-v1.2.2/finalize_support_sync.py package
 
       - name: Upload final return ZIP
         uses: actions/upload-artifact@v4
