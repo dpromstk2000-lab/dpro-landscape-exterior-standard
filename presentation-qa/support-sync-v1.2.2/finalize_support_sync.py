@@ -78,7 +78,10 @@ def package():
   shutil.copy2(ROOT/p,stage/pathlib.Path(p).name)
  for p in (BASE/'screens').glob('*.png'): shutil.copy2(p,stage/p.name)
  for n in ['quick-render-contact.png','detailed-render-contact.png']: shutil.copy2(OUT/n,stage/n)
- for src,dst in [(OUT/'rendered-quick/page-1.png','quick-render-page-1.png'),(OUT/'rendered-quick/page-3.png','quick-render-page-3.png'),(OUT/'rendered-detailed/page-1.png','detailed-render-page-1.png'),(OUT/'rendered-detailed/page-8.png','detailed-render-page-8.png'),(OUT/'rendered-detailed/page-10.png','detailed-render-page-10.png')]: shutil.copy2(src,stage/dst)
+ quick_pages=sorted((OUT/'rendered-quick').glob('*.png'))
+ detailed_pages=sorted((OUT/'rendered-detailed').glob('*.png'))
+ assert len(quick_pages)==3 and len(detailed_pages)==10,(len(quick_pages),len(detailed_pages))
+ for src,dst in [(quick_pages[0],'quick-render-page-1.png'),(quick_pages[2],'quick-render-page-3.png'),(detailed_pages[0],'detailed-render-page-1.png'),(detailed_pages[7],'detailed-render-page-8.png'),(detailed_pages[9],'detailed-render-page-10.png')]: shutil.copy2(src,stage/dst)
  sums=[]
  for p in sorted(stage.iterdir()): sums.append(f'{sha256(p)}  {p.name}')
  (stage/'SHA256SUMS.txt').write_text('\n'.join(sums)+'\n')
