@@ -1,0 +1,142 @@
+name: DPRO 53 Tutorial Navigation V1.2.2 QA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dpro-53-tutorial-navigation-v122-qa
+  cancel-in-progress: false
+
+env:
+  START_HEAD: 55f35a88501bcf45920711d95057acefe597a06f
+  DPRO_BASE_URL: https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/
+
+jobs:
+  runtime_qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout final main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify final diff scope and protected Core blobs
+        run: |
+          set -euo pipefail
+          git diff --name-only "$START_HEAD"..HEAD | tee /tmp/changed.txt
+          while IFS= read -r f; do
+            case "$f" in
+              .github/workflows/dpro-53-tutorial-navigation-v122-qa.yml|site/tutorial.html|site/guide-center.html|presentation-qa/tutorial-navigation-v1.2.2/qa_runtime.mjs) ;;
+              *) echo "UNPERMITTED FINAL CHANGE: $f"; exit 1;;
+            esac
+          done < /tmp/changed.txt
+          declare -A expected=(
+            [site/index.html]=4fa71bfbb41562a5226221a75a2b6351e830008d
+            [site/owner.html]=d55da6f9a3cbbcae6f74285e22df603d0afa2758
+            [site/staff.html]=9012ba0800f7cd19350e343d6b1511804a6a803c
+            [site/customer.html]=04e4902c11cc4d6491f97fd4224b4e07d933adce
+            [site/system-check.html]=9033ac33af6570064c51cded566e4fa54628c808
+            [site/app-core.js]=a907e05db641b23bd39162263191e51240d9d868
+            [site/app.css]=4365341d0cd17d85374ce813a5a27341cf83e3d0
+            [site/auth-client.js]=80567163fe5c332f8fbe7223ab7908e141f0d10e
+            [site/config.js]=e69818433b0568f5bec1b3e9e65d3967ae6003de
+            [worker/worker.js]=983df0e93feecb15f9613f939d6d264997b740a5
+            [schema.sql]=c930aafcc941e98cb4933a9ba284c334ae9ac40a
+          )
+          for f in "${!expected[@]}"; do
+            actual="$(git rev-parse "HEAD:$f")"
+            test "$actual" = "${expected[$f]}" || { echo "CORE SHA CHANGED: $f $actual"; exit 1; }
+          done
+          node --check presentation-qa/tutorial-navigation-v1.2.2/qa_runtime.mjs
+          test "$(grep -o "step_id:'landscape-first10-" site/tutorial.html | wc -l)" -eq 10
+          grep -q 'TUTORIAL NAVIGATION V1.2.2' site/tutorial.html
+          grep -q 'id="startFirst10"' site/guide-center.html
+          grep -q 'id="resumeFirst10"' site/guide-center.html
+          grep -q 'id="replayFirst10"' site/guide-center.html
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          set -euo pipefail
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run live Tutorial Navigation runtime QA
+        run: node presentation-qa/tutorial-navigation-v1.2.2/qa_runtime.mjs
+
+      - name: Build final QA evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          out='presentation-qa/tutorial-navigation-v1.2.2/runtime-output'
+          mkdir -p "$out"
+          cp /tmp/changed.txt "$out/CHANGED_FILES.txt"
+          {
+            echo "START_HEAD=$START_HEAD"
+            echo "FINAL_HEAD=$(git rev-parse HEAD)"
+            echo "START_TUTORIAL_BLOB=$(git rev-parse "$START_HEAD:site/tutorial.html")"
+            echo "FINAL_TUTORIAL_BLOB=$(git rev-parse HEAD:site/tutorial.html)"
+            echo "START_GUIDE_BLOB=$(git rev-parse "$START_HEAD:site/guide-center.html")"
+            echo "FINAL_GUIDE_BLOB=$(git rev-parse HEAD:site/guide-center.html)"
+          } > "$out/BEFORE_AFTER_SHA.txt"
+          {
+            echo 'NO_CORE_CHANGE=PASS'
+            for f in site/index.html site/owner.html site/staff.html site/customer.html site/system-check.html site/app-core.js site/app.css site/auth-client.js site/config.js worker/worker.js schema.sql; do
+              echo "$f $(git rev-parse HEAD:$f)"
+            done
+          } > "$out/NO_CORE_CHANGE_EVIDENCE.txt"
+          cp site/tutorial.html "$out/tutorial.html"
+          cp site/guide-center.html "$out/guide-center.html"
+          cp presentation-qa/tutorial-navigation-v1.2.2/qa_runtime.mjs "$out/qa_runtime.mjs"
+          cp .github/workflows/dpro-53-tutorial-navigation-v122-qa.yml "$out/dpro-53-tutorial-navigation-v122-qa.yml"
+          python - <<'PY'
+          import json, pathlib
+          out=pathlib.Path('presentation-qa/tutorial-navigation-v1.2.2/runtime-output')
+          p=out/'TUTORIAL_RUNTIME_QA.json'
+          if not p.exists():
+              final={'status':'FAIL','blockers':['runtime output missing']}
+          else:
+              r=json.loads(p.read_text(encoding='utf-8'))
+              final={
+                'status':r.get('status'), 'blockers':r.get('blockers',[]),
+                'first10_count':r.get('desktop',{}).get('first10_count'),
+                'start':r.get('desktop',{}).get('start'),
+                'next':r.get('desktop',{}).get('all_next_transitions'),
+                'back':r.get('desktop',{}).get('back'),
+                'resume':r.get('desktop',{}).get('resume_exact'),
+                'replay':r.get('desktop',{}).get('replay'),
+                'esc':r.get('desktop',{}).get('esc_close'),
+                'target_missing':r.get('target_missing'),
+                'guide_center':r.get('guide_center'),
+                'business_mutation_count':r.get('business_mutation_count'),
+                'console_error_count':r.get('console_error_count'),
+                'request_error_count':r.get('request_error_count'),
+                'wrong_route_count':r.get('wrong_route_count'),
+                'wrong_target_count':r.get('wrong_target_count'),
+                'viewports':list(r.get('viewports',{}).keys())
+              }
+          (out/'FINAL_QA_REPORT.json').write_text(json.dumps(final,ensure_ascii=False,indent=2),encoding='utf-8')
+          lines=['# DPRO #53 Tutorial Navigation V1.2.2 Final QA','',f"Status: **{final.get('status')}**",'']
+          for k in ['first10_count','start','next','back','resume','replay','esc','business_mutation_count','console_error_count','request_error_count','wrong_route_count','wrong_target_count','viewports']:
+              if k in final: lines.append(f"{k}: {final.get(k)}")
+          (out/'FINAL_QA_REPORT.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dpro53-tutorial-navigation-v122-runtime-evidence
+          path: presentation-qa/tutorial-navigation-v1.2.2/runtime-output
+          if-no-files-found: error
+          retention-days: 14
