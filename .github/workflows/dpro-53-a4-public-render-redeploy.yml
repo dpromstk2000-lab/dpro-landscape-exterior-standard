@@ -1,0 +1,138 @@
+name: DPRO 53 A4 Public Render Redeploy
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/dpro-53-a4-public-render-redeploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  redeploy_and_verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Pre-write HEAD drift gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXPECTED_BASE="dde50f68a9f6f39d61b2028456a07eab0338a55a"
+          TARGET_WORKFLOW=".github/workflows/dpro-53-a4-public-render-redeploy.yml"
+          EXPECTED_A4_BLOB="286bb00b63311035c122435208628947578a06b1"
+
+          echo "CURRENT_HEAD=$(git rev-parse HEAD)"
+          git cat-file -e "${EXPECTED_BASE}^{commit}"
+
+          mapfile -t CHANGED < <(git diff --name-only "${EXPECTED_BASE}" HEAD)
+          printf 'CHANGED_SINCE_EXPECTED_BASE=%s\n' "${CHANGED[*]:-NONE}"
+
+          test "${#CHANGED[@]}" -eq 1
+          test "${CHANGED[0]}" = "${TARGET_WORKFLOW}"
+
+          test "$(git hash-object site/a4-flyer.html)" = "${EXPECTED_A4_BLOB}"
+
+          grep -Fq 'href="https://dpro-shop.com/"' site/a4-flyer.html
+          grep -Fq '>https://dpro-shop.com/</a>' site/a4-flyer.html
+
+          echo "HEAD_DRIFT_GATE=PASS"
+          echo "A4_SOURCE_BLOB=${EXPECTED_A4_BLOB}"
+          echo "A4_SOURCE_CANONICAL_URL=PASS"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload current site as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy current site to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify PUBLIC A4 after deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE="https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/a4-flyer.html"
+          PASS=0
+
+          for i in $(seq 1 24); do
+            TS="$(date +%s)"
+            URL="${BASE}?dpro_verify=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${i}-${TS}"
+
+            echo "VERIFY_ATTEMPT=${i}"
+            echo "VERIFY_URL=${URL}"
+
+            if curl -fsSL \
+              --retry 3 \
+              --retry-delay 2 \
+              --connect-timeout 10 \
+              --max-time 30 \
+              -H "Cache-Control: no-cache" \
+              -H "Pragma: no-cache" \
+              "${URL}" \
+              -o /tmp/public-a4.html; then
+
+              if grep -Fq 'href="https://dpro-shop.com/"' /tmp/public-a4.html \
+                 && grep -Fq '>https://dpro-shop.com/</a>' /tmp/public-a4.html \
+                 && grep -Fq '02 / DPRO SHOP公式' /tmp/public-a4.html; then
+                PASS=1
+                break
+              fi
+            fi
+
+            sleep 10
+          done
+
+          if [ "${PASS}" -ne 1 ]; then
+            echo "PUBLIC_A4_DPROSHOP_URL=FAIL"
+            echo "Public GitHub Pages did not expose the canonical DPRO SHOP URL."
+            exit 1
+          fi
+
+          echo "PUBLIC_A4_DPROSHOP_URL=PASS"
+          echo "PUBLIC_URL=${BASE}"
+          grep -o 'https://dpro-shop.com/' /tmp/public-a4.html | head -n 3 || true
+
+      - name: Remove temporary redeploy workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "DPRO CENTRAL"
+          git config user.email "actions@users.noreply.github.com"
+
+          git pull --ff-only origin main
+          git rm .github/workflows/dpro-53-a4-public-render-redeploy.yml
+          git commit -m "chore: remove temporary DPRO 53 public redeploy workflow"
+          git push origin HEAD:main
+
+      - name: Final summary
+        shell: bash
+        run: |
+          echo "DPRO_53_A4_PUBLIC_RENDER_REDEPLOY=PASS"
+          echo "PUBLIC_A4_DPROSHOP_URL=PASS"
+          echo "PUBLIC_URL=https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/a4-flyer.html"
+          echo "CORE_REBUILD=NONE"
