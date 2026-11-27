@@ -1,0 +1,94 @@
+name: DPRO LANDSCAPE SITE R1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/dpro-landscape-site-r1.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: landscape-site-r1
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install QA tools
+        run: |
+          python -m pip install 'qrcode[pil]' zxing-cpp pymupdf playwright==1.57.0
+          python -m playwright install chromium
+          if ! fc-list :lang=ja | grep -q .; then sudo apt-get update -qq -o Acquire::Retries=3 || true; sudo apt-get install -y fonts-noto-cjk; fi
+      - name: Patch and verify
+        run: |
+          python - <<'PYCODE'
+          from pathlib import Path
+          import json,re,threading,os
+          from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
+          from functools import partial
+          import qrcode,zxingcpp,fitz
+          from PIL import Image
+          from playwright.sync_api import sync_playwright
+          site=Path('site');qa=Path('landscape-qa');qa.mkdir(exist_ok=True)
+          assert (site/'landscape-hero.jpg').exists()
+          assert 'demo: true' in (site/'config.js').read_text()
+          assert 'if(CFG.demo)return browserDemoApi' in (site/'app-core.js').read_text()
+          (site/'a4-flyer.html').write_text('<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DPRO 造園・外構｜A4 FLYER MASTER V2.1</title><style>\n*{box-sizing:border-box}body{margin:0;background:#dfe8e4;font-family:"Noto Sans CJK JP","Noto Sans JP",Arial,sans-serif;color:#102f29}.bar{display:flex;justify-content:center;gap:12px;background:#102921;padding:10px;position:sticky;top:0;z-index:10}.bar button,.bar a{font:700 14px sans-serif;padding:9px 18px;border:0;border-radius:30px;color:#102921;background:#fff;text-decoration:none;cursor:pointer}.bar button{background:#18cc8e}.stage{width:210mm;height:297mm;margin:12mm auto;position:relative}.sheet{width:210mm;height:297mm;background:#fff;position:absolute;overflow:hidden;transform-origin:top left;box-shadow:0 15px 45px #0002}.hero{height:76mm;display:grid;grid-template-columns:62% 38%;background:#0a211b;color:#fff;overflow:hidden}.copy{padding:8mm 10mm}.brand{font-size:10px;font-weight:900;letter-spacing:.08em}.brand b{display:inline-grid;place-items:center;border-radius:6px;background:#18c98a;width:24px;height:24px;margin-right:8px}.ey{font-size:9px;color:#45e2aa;font-weight:900;letter-spacing:.12em}.hero h1{font-size:29px;line-height:1.16;margin:9px 0}.hero p{font-size:11px;line-height:1.55;margin:0;color:#e5f3ed}.hero-photo{position:relative;overflow:hidden}.hero-photo img{width:100%;height:100%;object-fit:cover}.photo-label{position:absolute;bottom:0;right:0;background:#0a211bd9;color:white;padding:4px 8px;font-size:8px}.body{padding:4mm 10mm 0;display:grid;gap:2.6mm}.title{font-size:15px;font-weight:900;margin:0}.title b{color:#0ba77b}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:2mm}.f{border:1px solid #d5e2dd;border-radius:9px;padding:8px 10px;height:23mm}.f span{display:inline-grid;place-items:center;width:21px;height:21px;background:#e2f7ef;color:#13876b;border-radius:6px;font-size:10px;font-weight:900}.f h3{font-size:12px;margin:3px 0}.f p{font-size:9px;line-height:1.4;margin:0;color:#3d5750}.connected{background:#0b352b;color:#fff;border-radius:10px;padding:3mm;height:39mm}.connected h2{font-size:15px;margin:0 0 7px}.flow{display:grid;grid-template-columns:1fr 20px .9fr 20px 1.1fr;align-items:center;gap:3px}.flow div:not(.arr){background:#eaf8f1;border-radius:7px;padding:8px;color:#123b2e;height:14mm;font-size:10px;line-height:1.4}.flow div:nth-child(3){background:#19c98e}.arr{text-align:center;color:#70e1c0;font-size:20px}.sub{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;font-size:9px;color:#e7f6ef}.sub b{color:#77e7bb}.cost{height:22mm;display:grid;grid-template-columns:1.05fr repeat(3,1fr);gap:2mm;background:#f9f6ef;border:1px solid #e7dfd2;border-radius:9px;padding:2.5mm;align-items:center}.cost div{font-size:10px}.cost div:not(:first-child){background:#fff;border:1px solid #e7dfd2;padding:6px;border-radius:7px;height:15mm}.cost small{display:block;color:#8b6c49;font-size:8px}.price{height:24mm;background:#f1fbf6;border:1px solid #b4e9d7;border-radius:9px;display:grid;grid-template-columns:1.4fr 1fr;align-items:center;padding:3mm;gap:10px}.price strong{font-size:29px;color:#00856b}.price h2{font-size:16px;margin:0}.price p{font-size:9px;margin:3px 0}.chips{font-size:8px;color:#425e52}.action-head{display:flex;justify-content:space-between;align-items:end}.action-head h2{font-size:15px;margin:0}.action-head small{font-size:8px;color:#536a62}.action-grid{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:2mm}.action-card{height:37mm;border:1px solid #cfe0d8;border-radius:10px;display:grid;grid-template-columns:minmax(0,1fr) 24mm;gap:2mm;padding:2mm;align-items:center;text-decoration:none;color:inherit;background:#f6fbf8;min-width:0}.action-card.site{background:white;border-color:#62ba99}.action-copy{min-width:0}.action-copy h3{font-size:13px;margin:4px 0}.action-copy p{font-size:9px;line-height:1.5;margin:0;overflow-wrap:anywhere}.action-copy small{font-size:8px;color:#087b65;font-weight:bold}.action-qr{text-align:center;min-width:0}.action-qr img{display:block;width:24mm;height:24mm;background:white;image-rendering:pixelated}.action-qr span{font-size:9px;font-weight:800}.foot{position:absolute;bottom:0;left:0;right:0;height:9.5mm;background:#0a211b;color:#fff;padding:0 10mm;display:flex;align-items:center;justify-content:space-between;font-size:9px}.foot b{color:#76dfb7}@page{size:A4;margin:0}@media print{body{background:white}.bar{display:none}.stage{width:210mm!important;height:297mm!important;margin:0}.sheet{transform:none!important;box-shadow:none}} \n</style></head><body><div class="bar"><button onclick="window.print()">A4で印刷 / PDF保存</button><a href="https://dpromstk2000-lab.github.io/dpro-line-systems-site/systems/landscape-exterior.html">製品紹介へ</a></div><div class="stage"><main class="sheet"><section class="hero"><div class="copy"><div class="brand"><b>D</b>DPRO LINE SYSTEMS</div><p class="ey" style="margin-top:12px;color:#45e2aa">LANDSCAPE / EXTERIOR</p><h1>写真相談から、<br>現調・見積・施工、<br>完了承認まで。<br>ひとつの現場カルテへ。</h1><p>相談写真・施工箇所・見積根拠・施工前後の写真を案件ごとに整理。造園・外構の仕事を一つの流れにつなぎます。</p></div><div class="hero-photo"><img src="landscape-hero.jpg" alt="造園・外構の作業イメージ"><div class="photo-label">LANDSCAPE / 造園・外構</div></div></section><div class="body"><h2 class="title">造園・外構の毎日を、<b>6つの仕組み</b>で整える。</h2><div class="features"><article class="f"><span>01</span><h3>写真から相談受付</h3><p>相談写真を案件へ紐づけ、現調の確認につなげます。</p></article><article class="f"><span>02</span><h3>現調チェック</h3><p>確認項目・写真ポイントを一つの案件で整理。</p></article><article class="f"><span>03</span><h3>見積根拠リンク</h3><p>現調内容・写真と見積をつなぎ、根拠を確認。</p></article><article class="f"><span>04</span><h3>施工前後写真</h3><p>施工箇所ごとにBefore / Afterを蓄積。</p></article><article class="f"><span>05</span><h3>完了承認</h3><p>必要な施工後写真を確認し、お客様が承認。</p></article><article class="f"><span>06</span><h3>季節アフター候補</h3><p>次回の剪定・点検候補を管理者が確認。</p></article></div><section class="connected"><div class="ey">CONNECTED EXPERIENCE</div><h2>入口は自由。管理は、ひとつ。</h2><div class="flow"><div><b>WEB / LINE / 窓口</b><br>写真相談・ご要望</div><div class="arr">→</div><div><b>DPRO SYSTEM</b><br>案件・写真・見積</div><div class="arr">→</div><div><b>ONE MANAGEMENT HUB</b><br>管理者・スタッフ・お客様</div></div><div class="sub"><div><b>CUSTOM FIT</b><br>剪定・植栽・外構工事に合わせる。</div><div><b>LIVE SYNC</b><br>権限ごとに同じ案件カルテを確認。</div></div></section><section class="cost"><div><small>MONTHLY COST CHECK</small><b>その固定費、別々に<br>払い続けていませんか？</b></div><div><small>LINE公式運用</small><b>月額3,300円</b></div><div><small>ホームページ運用</small><b>月額1,100円</b></div><div><small>DPROシステム運用</small><b>月額1,100円</b></div></section><section class="price"><div><small style="color:#087b65;font-weight:bold">DPRO SHOP MONTHLY OPERATION</small><h2>3つまとめて月額 <strong>5,500円</strong> <small>（税込）</small></h2><div class="chips">LINE公式運用 3,300円 ／ ホームページ 1,100円 ／ DPRO 1,100円</div></div><p><b>5,500円で、3つまとめて運用。</b><br>LINE公式・ホームページ・DPROシステムをつなげる。</p></section><div class="action-head"><h2>相談する。知る。試す。DPROを、もっと近くに。</h2><small>相談はLINE、詳細は公式サイト、操作はDEMO。</small></div><div class="action-grid"><a class="action-card line" href="https://lin.ee/YxJGXV6D" target="_blank" rel="noopener"><div class="action-copy"><small>01 / LINE</small><h3>相談する。</h3><p>導入相談・デモ希望はこちら。</p></div><div class="action-qr"><img src="qr-line-r1.png" alt="LINEで相談 QR"><span>LINEで相談</span></div></a><a class="action-card site" href="https://dpro-shop.com/" target="_blank" rel="noopener"><div class="action-copy"><small>02 / SITE</small><h3>詳しく見る。</h3><p>サービス・料金・運用の詳細。</p><p style="font-weight:bold;color:#087b65">dpro-shop.com</p></div><div class="action-qr"><img src="qr-shop-r1.png" alt="公式サイト QR"><span>公式サイト</span></div></a><a class="action-card demo" href="https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/demo-guide.html" target="_blank" rel="noopener"><div class="action-copy"><small>03 / DEMO</small><h3>体験する。</h3><p>お客様・スタッフ・管理者の公開DEMO。</p></div><div class="action-qr"><img src="qr-demo-r1.png" alt="DEMOを体験 QR"><span>DEMOを体験</span></div></a></div></div><footer class="foot"><span>DPRO LINE SYSTEMS\u3000<b>DPRO SHOP</b></span><span>造園・外構 / A4 FLYER MASTER V2.1</span></footer></main></div><script>function fit(){const s=document.querySelector(\'.stage\'),p=document.querySelector(\'.sheet\');const r=Math.min(1,(innerWidth-12)/p.offsetWidth);s.style.width=p.offsetWidth*r+\'px\';s.style.height=p.offsetHeight*r+\'px\';p.style.transform=\'scale(\'+r+\')\'}fit();addEventListener(\'resize\',fit)</script></body></html>')
+          (site/'demo-guide.html').write_text('<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>DPRO 造園・外構｜公開操作DEMO</title><link rel="stylesheet" href="app.css"><style>.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:14px;margin-top:16px}.role-grid .card{display:flex;flex-direction:column;gap:10px}.role-grid a{margin-top:auto}.guide-hero{background:#0d3028;color:white}.guide-hero p{color:#e5f5ed}</style></head><body><main class="wrap"><section class="hero guide-hero"><div> DPRO LINE SYSTEMS / LANDSCAPE</div><h1>造園・外構を体験する</h1><p>登録不要。架空データだけを使うブラウザDEMOです。実在する氏名・住所・電話番号・写真は入力しないでください。操作内容はこのブラウザ内に保存され、本番へ送信されません。</p></section><section class="role-grid" aria-label="役割別デモ"><article class="card"><h2>写真相談受付</h2><p>相談フォームの操作</p><a class="btn" href="index.html">体験する</a></article><article class="card"><h2>お客様マイページ</h2><p>見積・施工予定・写真・完了承認</p><a class="btn" href="customer.html">体験する</a></article><article class="card"><h2>現場スタッフ</h2><p>担当案件・施工後写真・進捗・完了提出</p><a class="btn" href="staff.html">体験する</a></article><article class="card"><h2>管理者PC</h2><p>案件一覧・現場カルテ・見積・季節アフター</p><a class="btn" href="owner.html">体験する</a></article></section><section class="card" style="margin-top:16px"><h2>おすすめの体験順</h2><p>相談受付 → 管理者の案件確認 → スタッフの施工後写真登録・提出 → お客様の完了承認。</p><div class="row"><a class="btn secondary" href="tutorial.html">操作チュートリアル</a><a class="btn secondary" href="guide-center.html">操作ガイド</a><a class="btn secondary" href="a4-flyer.html">A4チラシ</a><a class="btn secondary" href="product-site.html">製品紹介</a></div></section></main></body></html>')
+          (site/'landscape-demo-nav-r1.js').write_text('(()=>{if(window.DPRO_LANDSCAPE_CONFIG?.demo!==true)return;const roleLinks=[[\'demo-guide.html\',\'DEMO一覧\'],[\'index.html\',\'相談受付\'],[\'customer.html\',\'お客様\'],[\'staff.html\',\'現場スタッフ\'],[\'owner.html\',\'管理者PC\']];const n=document.createElement(\'nav\');n.id=\'landscapeDemoNav\';n.setAttribute(\'aria-label\',\'公開DEMO切替\');n.innerHTML=\'<strong>公開DEMO｜架空データ専用</strong><div>\'+roleLinks.map(([p,l])=>`<a href="${p}">${l}</a>`).join(\'\')+\'</div><small>操作はこのブラウザ内のみ。本番への送信なし。</small>\';document.body.prepend(n);const old=document.querySelector(\'.topbar .nav\');if(old)old.hidden=true;const st=document.createElement(\'style\');st.textContent=\'#landscapeDemoNav{padding:12px 16px;background:#0d3028;color:white;display:grid;gap:8px;font-size:14px}#landscapeDemoNav div{display:flex;flex-wrap:wrap;gap:8px}#landscapeDemoNav a{display:inline-block;background:#fff;color:#164c3e;border-radius:8px;padding:9px 12px;text-decoration:none;font-weight:800;min-height:44px}#landscapeDemoNav small{color:#d2ede1} .topbar .nav[hidden]{display:none!important} @media(max-width:480px){#landscapeDemoNav a{flex:1 1 40%;text-align:center}.topbar{position:relative}} @media print{#landscapeDemoNav{display:none}}\';document.head.append(st);})();')
+          urls={'line': 'https://lin.ee/YxJGXV6D', 'shop': 'https://dpro-shop.com/', 'demo': 'https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/demo-guide.html'}
+          for key,url in urls.items():
+           q=qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M,box_size=16,border=4);q.add_data(url);q.make(fit=True);im=q.make_image().convert('RGB');assert {v.text for v in zxingcpp.read_barcodes(im)}=={url};im.save(site/f'qr-{key}-r1.png')
+          for name in ['index.html','customer.html','staff.html','owner.html']:
+           p=site/name;s=p.read_text();assert 'config.js' in s and '</body>' in s
+           if name=='staff.html':
+            s=s.replace('url:`https://placehold.co/800x600?text=After+${encodeURIComponent(name)}`,','')
+           if 'landscape-demo-nav-r1.js' not in s:s=s.replace('</body>','<script src="landscape-demo-nav-r1.js" defer></script></body>')
+           p.write_text(s)
+          for name in ['product-site.html','official-site.html','lp.html']:
+           p=site/name;s=p.read_text();s=re.sub(r'href="index.html"(?=[^>]*>[^<]*(?:DEMO|デモ))','href="demo-guide.html"',s,flags=re.I);p.write_text(s)
+          server=ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,directory=str(site.resolve())));threading.Thread(target=server.serve_forever,daemon=True).start();base=f'http://127.0.0.1:{server.server_port}/'
+          expected=set(urls.values());pdf=site/'DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.1_20261127.pdf'
+          def decode(path):return {v.text for v in zxingcpp.read_barcodes(Image.open(path))}
+          with sync_playwright() as pw:
+           b=pw.chromium.launch(args=['--no-sandbox']);ctx=b.new_context(viewport={'width':1440,'height':1250},device_scale_factor=2);external=[];ctx.route('**/*',lambda r:r.continue_() if r.request.url.startswith(base) or r.request.url.startswith('data:') else (external.append(r.request.url),r.abort())[-1]);p=ctx.new_page();p.goto(base+'a4-flyer.html');p.evaluate('document.fonts.ready');assert p.locator('.hero-photo img').evaluate('(e)=>e.complete&&e.naturalWidth>0');assert p.locator('.action-grid a').count()==3
+           def layout():
+            v=p.evaluate("() => {const r=e=>e.getBoundingClientRect();return {bottom:r(document.querySelector('.action-grid')).bottom,footer:r(document.querySelector('.foot')).top,cards:[...document.querySelectorAll('.action-card')].map(e=>{const a=r(e),q=r(e.querySelector('img')),t=r(e.querySelector('.action-copy'));return q.left>=a.left-1&&q.right<=a.right+1&&t.right<=q.left+1&&q.bottom<=a.bottom+1&&t.bottom<=a.bottom+1})}}");assert v['bottom']<=v['footer']+1 and all(v['cards']),v;return v
+           screen=layout();p.locator('.sheet').screenshot(path=str(qa/'screen.png'));assert expected<=decode(qa/'screen.png');p.emulate_media(media='print');printed=layout();p.pdf(path=str(pdf),prefer_css_page_size=True,print_background=True);p.emulate_media(media='screen')
+           checks=[]
+           for width in [390,1440]:
+            p.set_viewport_size({'width':width,'height':1000})
+            for name in ['demo-guide.html','index.html','customer.html','staff.html','owner.html']:
+             p.goto(base+name);p.wait_for_load_state('networkidle');assert p.locator('body').inner_text().strip();assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2'),(name,width)
+             if name!='demo-guide.html':assert p.locator('#landscapeDemoNav').is_visible()
+             checks.append([name,width,'PASS'])
+           p.goto(base+'owner.html');p.locator('#reset').click();p.locator('#cases button').first.wait_for();p.goto(base+'staff.html');p.locator('#submit').wait_for();p.locator('#submit').click();p.locator('#actionResult').wait_for();assert '提出できません' in p.locator('#actionResult').inner_text();
+           for i in range(2):p.locator('.add-after-demo').nth(i).click();p.wait_for_timeout(400)
+           p.locator('#progress').click();p.locator('#submit').click();p.wait_for_timeout(400);p.goto(base+'customer.html');p.locator('#approve').click();p.get_by_text('回答済み:',exact=False).wait_for();p.goto(base+'owner.html');p.locator('#detail .badge').filter(has_text='完了').wait_for();checks.append(['local completion workflow','PASS']);assert not [x for x in external if '/api/' in x],external;b.close()
+          with fitz.open(pdf) as d:assert len(d)==1 and abs(d[0].rect.width-595.28)<3 and abs(d[0].rect.height-841.89)<3;d[0].get_pixmap(matrix=fitz.Matrix(3,3),alpha=False).save(qa/'print.png')
+          assert expected<=decode(qa/'print.png');server.shutdown();result={'screen_qr':sorted(decode(qa/'screen.png')),'print_qr':sorted(decode(qa/'print.png')),'layout':screen,'print_layout':printed,'checks':checks,'real_api_requests':0,'production_mutations':0};(qa/'RESULT.json').write_text(json.dumps(result,ensure_ascii=False,indent=2));print(json.dumps(result,ensure_ascii=False))
+
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: DPRO-LANDSCAPE-R1-QA
+          path: landscape-qa/
+          if-no-files-found: warn
+      - name: Commit verified files only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- site/a4-flyer.html site/demo-guide.html site/landscape-demo-nav-r1.js site/qr-line-r1.png site/qr-shop-r1.png site/qr-demo-r1.png site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.1_20261127.pdf site/index.html site/customer.html site/staff.html site/owner.html site/product-site.html site/official-site.html site/lp.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'DPRO LANDSCAPE SITE R1'
+          git push origin HEAD:main
+      - name: Dispatch Pages deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main
