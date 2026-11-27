@@ -1,0 +1,91 @@
+name: DPRO LANDSCAPE FLYER OFFICIAL CARD R2
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/dpro-landscape-flyer-official-card-r2.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: landscape-flyer-r2
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install QA tools
+        run: |
+          python -m pip install pillow zxing-cpp pymupdf playwright==1.57.0
+          python -m playwright install chromium
+      - name: Patch and verify
+        run: |
+          python - <<'PYCODE'
+          from pathlib import Path
+          p=Path('site/a4-flyer.html')
+          s=p.read_text(encoding='utf-8')
+          old='<p style="font-weight:bold;color:#087b65">dpro-shop.com</p>'
+          new='<div class="site-url-label">OFFICIAL WEB ADDRESS / PCから直接アクセス</div><div class="site-url">https://dpro-shop.com/</div>'
+          css='/* DPRO official-site card R2 */\n.action-card.site{background:linear-gradient(135deg,#f1fcf7 0%,#fff 72%);border-color:#64bc99;grid-template-columns:minmax(0,1fr) 20.5mm;gap:1.3mm}\n.action-card.site .action-copy{align-self:stretch;display:flex;flex-direction:column;justify-content:center}\n.action-card.site .action-qr img{width:20.5mm;height:20.5mm;margin:0 auto 1mm}\n.action-card.site .site-url-label{margin-top:auto;padding-top:1.4mm;border-top:1px solid #d3e7de;font-size:5.7px;line-height:1.3;font-weight:900;color:#52766b;letter-spacing:.02em}\n.action-card.site .site-url{margin-top:.55mm;background:#e9f8f2;border:1px solid #b9e4d2;border-radius:1.5mm;padding:.9mm .8mm;font-size:12px;line-height:1.12;font-weight:900;color:#063f30;letter-spacing:-.035em;white-space:nowrap;max-width:100%}\n'
+          if 'DPRO official-site card R2' not in s:
+           assert s.count(old)==1, 'Unexpected official card source; no files committed'
+           assert s.count('</style>')>=1
+           s=s.replace(old,new,1).replace('</style>',css+'</style>',1)
+           s=s.replace('02 / SITE','02 / OFFICIAL SITE',1)
+           s=s.replace('<p>サービス・料金・運用の詳細。</p>','<p>サービス・料金・各業種のDPROシステムを、公式サイトで確認。</p>',1)
+           p.write_text(s,encoding='utf-8')
+          assert s.count('class="site-url"')==1 and new in s
+          import functools,threading,http.server,json
+          from pathlib import Path
+          from PIL import Image
+          import fitz,zxingcpp
+          from playwright.sync_api import sync_playwright
+          site=Path('site');qa=Path('landscape-r2-qa');qa.mkdir(exist_ok=True)
+          pdf=site/'DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.1_20261127.pdf'
+          server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(site)))
+          threading.Thread(target=server.serve_forever,daemon=True).start()
+          expected={'https://lin.ee/YxJGXV6D','https://dpro-shop.com/','https://dpromstk2000-lab.github.io/dpro-landscape-exterior-standard/demo-guide.html'}
+          def decode(path):return {x.text for x in zxingcpp.read_barcodes(Image.open(path))}
+          with sync_playwright() as pw:
+           b=pw.chromium.launch(args=['--no-sandbox']);p=b.new_page(viewport={'width':1440,'height':1400},device_scale_factor=2)
+           p.route('**/*',lambda r:r.continue_() if r.request.url.startswith('http://127.0.0.1:') else r.abort())
+           p.goto(f'http://127.0.0.1:{server.server_port}/a4-flyer.html');p.evaluate('document.fonts.ready');p.wait_for_load_state('networkidle')
+           assert p.locator('.action-card.site').get_attribute('href')=='https://dpro-shop.com/'
+           assert p.locator('.site-url').inner_text()=='https://dpro-shop.com/'
+           def layout():
+            result=p.evaluate("() => {const rect=e=>e.getBoundingClientRect(),u=document.querySelector('.site-url'),a=document.querySelector('.action-card.site'),q=a.querySelector('img'),t=a.querySelector('.action-copy'),l=a.querySelector('.site-url-label'),r=rect(u),c=rect(a),qr=rect(q);return {url_fits:u.scrollWidth<=u.clientWidth+1,url_inside:r.left>=c.left&&r.right<=qr.left+1&&r.bottom<=c.bottom+1,label_inside:rect(l).bottom<=r.top+1,copy_inside:rect(t).bottom<=c.bottom+1,footer_clear:rect(document.querySelector('.action-grid')).bottom<=rect(document.querySelector('.foot')).top+1,qr_inside:qr.right<=c.right+1&&qr.bottom<=c.bottom+1,all_images:[...document.querySelectorAll('img')].every(i=>i.complete&&i.naturalWidth>0)}}")
+            assert all(result.values()),result
+            return result
+           screen=layout();p.locator('.sheet').screenshot(path=str(qa/'screen.png'));assert expected<=decode(qa/'screen.png')
+           p.emulate_media(media='print');printed=layout();p.pdf(path=str(pdf),prefer_css_page_size=True,print_background=True)
+           p.emulate_media(media='screen');p.set_viewport_size({'width':390,'height':844});p.wait_for_timeout(150);mobile=layout();assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2');b.close()
+          with fitz.open(pdf) as d:
+           assert len(d)==1 and abs(d[0].rect.width-595.28)<3 and abs(d[0].rect.height-841.89)<3
+           d[0].get_pixmap(matrix=fitz.Matrix(3,3),alpha=False).save(qa/'print.png')
+           assert 'https://dpro-shop.com/' in d[0].get_text()
+          assert expected<=decode(qa/'print.png')
+          server.shutdown()
+          result={'screen_layout':screen,'print_layout':printed,'mobile_layout':mobile,'screen_qr':sorted(decode(qa/'screen.png')),'print_qr':sorted(decode(qa/'print.png')),'a4_pages':1,'business_mutations':0}
+          (qa/'RESULT.json').write_text(json.dumps(result,ensure_ascii=False,indent=2));print(json.dumps(result,ensure_ascii=False))
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: DPRO-LANDSCAPE-FLYER-R2-QA
+          path: landscape-r2-qa/
+          if-no-files-found: warn
+      - name: Commit verified files only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- site/a4-flyer.html site/DPRO_LANDSCAPE_EXTERIOR_A4_FLYER_MASTER_V2.1_20261127.pdf
+          if ! git diff --cached --quiet; then git commit -m 'DPRO LANDSCAPE FLYER OFFICIAL CARD R2'; git push origin HEAD:main; fi
+      - name: Dispatch Pages deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main
